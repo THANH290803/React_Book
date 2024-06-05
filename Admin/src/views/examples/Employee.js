@@ -262,6 +262,7 @@ import {
                           </DropdownToggle>
                           <DropdownMenu className="dropdown-menu-arrow" right>
                             <DropdownItem
+                              onClick={() => fetchDataById(employee.id)}
                             >
                               Sửa 
                             </DropdownItem>
@@ -347,7 +348,7 @@ import {
         </Container>
 
       <Modal isOpen={modal} toggle={toggleModal}>
-        <ModalHeader style={{paddingBottom: "0px"}} toggle={toggleModal}><h2>Thêm nhà xuất bản</h2></ModalHeader>
+        <ModalHeader style={{paddingBottom: "0px"}} toggle={toggleModal}><h2>Thêm nhân viên</h2></ModalHeader>
         <ModalBody style={{paddingTop: "0px"}}>
           <FormGroup>
                 {errorMessage && (
@@ -392,7 +393,51 @@ import {
       </Modal>
 
 
-      
+      <Modal isOpen={showPopup} toggle={() => setShowPopup(false)}>
+        <ModalHeader style={{paddingBottom: "0px"}} toggle={() => setShowPopup(false)}><h2>Sửa nhân viên</h2></ModalHeader>
+        <ModalBody>
+        <FormGroup>
+            {errorMessage && (
+              <div style={{ color: 'red', padding: '10px', backgroundColor: '#ffe6e6', marginBottom: '10px' }}>
+                {errorMessage}
+              </div>
+            )}
+          </FormGroup>
+          <FormGroup>
+            <Label for="username">Username</Label>
+            <Input type="text" name="username" id="username" value={editedData.username} onChange={(e) => setEditedData({ ...editedData, username: e.target.value })} />
+          </FormGroup>
+          <FormGroup>
+            <Label for="phoneNumber">Số điện thoại</Label>
+            <Input type="text" name="phoneNumber" id="phoneNumber" value={editedData.phone_number} onChange={(e) => setEditedData({ ...editedData, phone_number: e.target.value })} />
+          </FormGroup>
+          <FormGroup>
+            <Label for="email">Email</Label>
+            <Input type="email" name="email" id="email" value={editedData.email} onChange={(e) => setEditedData({ ...editedData, email: e.target.value })} />
+          </FormGroup>
+          <FormGroup>
+            <Label for="address">Địa chỉ</Label>
+            <Input type="text" name="address" id="address" value={editedData.address} onChange={(e) => setEditedData({ ...editedData, address: e.target.value })} />
+          </FormGroup>
+          <FormGroup>
+            <Label for="password">Password</Label>
+            <Input type="password" name="password" id="password" value={editedData.password} onChange={(e) => setEditedData({ ...editedData, password: e.target.value })} />
+          </FormGroup>
+          <FormGroup>
+          <Label for="role">Vai trò</Label>
+            <Input type="select" name="role" id="role" value={editedData.role} onChange={(e) => setEditedData({ ...editedData, role: e.target.value })}>
+              <option value="">Chọn vai trò</option>
+              <option value="1">Admin</option>
+              <option value="2">Nhân viên</option>
+            </Input>
+          </FormGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="primary" onClick={handleEdit}>Cập nhật</Button>{' '}
+          <Button color="secondary" onClick={() => setShowPopup(false)}>Hủy</Button>
+        </ModalFooter>
+      </Modal>
+
       </>
     );
   };
