@@ -201,6 +201,80 @@ import {
           }
       };
 
+      // Edit
+    const [showPopup, setShowPopup] = useState(false);
+    const [Data, setData] = useState(null);
+    const [editedData, setEditedData] = useState({
+      isbn: '',
+      name: '',
+      amount: '',
+      price: '',
+      author: '',
+      img: '',
+      description: '',
+      publish_year: '',
+      category_id: '',
+      publisher_id: '',
+  });
+
+    const fetchDataById = async (id) => {
+        try {
+          const response = await axios.get(`http://127.0.0.1:8000/api/book/edit/${id}`);
+          setShowPopup(true);
+          setData(response.data);
+          setEditedData(response.data); // Set edited data with fetched data
+          setPreviewImg('');
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+    };
+
+    const handleEdit = async () => {
+        try {
+          // Send edited data to API for updating
+          await axios.put(`http://127.0.0.1:8000/api/book/update/${Data.id}`, {
+            ...editedData,
+            img: editedData.img, // Send only the file name, not the temporary URL
+        });
+          // Close popup and reset state
+          setShowPopup(false);
+          setData(null);
+          setEditedData({});
+          setPreviewImg('');
+          setErrorMessage(''); 
+          fetchData();
+        } catch (error) {
+            if (error.response && error.response.status === 409) {
+                // Hiển thị thông báo lỗi từ phản hồi của server
+                setErrorMessage(error.response.data.message);
+                // Đặt hẹn giờ để xóa thông báo sau 3 giây
+                setTimeout(() => {
+                    setErrorMessage('');
+                }, 3000);
+            } else {
+                // Xử lý các loại lỗi khác
+                console.error('Lỗi khi cập nhật thông tin danh mục:', error);
+            }
+        }
+      };
+
+      const handleEditFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Set the file name
+            setEditedData({ ...editedData, img: file.name });
+            // Set the preview image URL
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewImg(reader.result);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setPreviewImg('');
+        }
+    };
+    
+
       // Delete
       const deleteData = async (id) => {
         try {
@@ -294,10 +368,9 @@ import {
                           </DropdownToggle>
                           <DropdownMenu className="dropdown-menu-arrow" right>
                             <DropdownItem
-                              href="#pablo"
-                              onClick={(e) => e.preventDefault()}
+                              onClick={() => fetchDataById(book.id)}
                             >
-                              Action
+                              Sửa sách
                             </DropdownItem>
                             <DropdownItem
                               onClick={() => deleteData(book.id)}
@@ -387,7 +460,15 @@ import {
               <Col md="6">
                 <FormGroup>
                   <Label for="isbn">ISBN</Label>
-                  <Input type="text" name="isbn" id="isbn" value={isbn} onChange={(e) => setIsbn(e.target.value)} />
+                  <Input type="text" name="isbn" id="isbn" value={isbn} onChange={(e) => setIsbn(e.target.value)} maxLength={10}
+                  onInput={(e) => {
+                    const inputValue = e.target.value;
+                    if (inputValue.length > 10) {
+                      e.target.value = inputValue.slice(0, 10); // Cắt bớt giá trị nhập vào nếu nó vượt quá 10 ký tự
+                    }
+                    setIsbn(e.target.value);
+                  }}
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label for="amount">Số lượng</Label>
@@ -446,6 +527,89 @@ import {
           <ModalFooter style={{ paddingTop: "0px" }}>
             <Button color="primary" onClick={addBook}>Thêm</Button>
             <Button color="secondary" onClick={toggleModal}>Hủy</Button>
+          </ModalFooter>
+        </Modal>
+
+        {/* // Edit */}
+        <Modal isOpen={showPopup} toggle={() => setShowPopup(false)} className="modal-lg">
+          <ModalHeader style={{paddingBottom: "0px"}} toggle={() => setShowPopup(false)}><h2>Sửa sách</h2></ModalHeader>
+            <ModalBody style={{ paddingTop: "0px" }}>
+              <Row>
+                <Col md="6">
+                  <FormGroup>
+                    <Label for="isbn">ISBN</Label>
+                    <Input type="text" name="isbn" id="isbn" value={editedData.isbn} onChange={(e) => setEditedData({ ...editedData, isbn: e.target.value })} maxLength={10}
+                    onInput={(e) => {
+                      if (e.target.value.length > 10) {
+                        e.target.value = e.target.value.slice(0, 10); // Cắt bớt giá trị nhập vào nếu nó vượt quá 10 ký tự
+                      }
+                      setEditedData({ ...editedData, isbn: e.target.value });
+                    }}
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label for="amount">Số lượng</Label>
+                    <Input type="text" name="amount" id="amount" value={editedData.amount} onChange={(e) => setEditedData({ ...editedData, amount: e.target.value })} />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label for="author">Tác giả</Label>
+                    <Input type="text" name="author" id="author" value={editedData.author} onChange={(e) => setEditedData({ ...editedData, author: e.target.value })} />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label for="category_id">Danh mục</Label>
+                    <Input type="select" name="category_id" id="category_id" value={editedData.category_id} onChange={(e) => setEditedData({ ...editedData, category_id: e.target.value })}>
+                      <option value="">Chọn danh mục</option>
+                      {/* Mapping qua danh sách các danh mục và tạo option cho mỗi danh mục */}
+                      {categories.map(category => (
+                            <option key={category.id} value={category.id}>{category.name}</option>
+                          ))}
+                    </Input>
+                  </FormGroup>
+                </Col>
+                <Col md="6">
+                  <FormGroup>
+                    <Label for="name">Tên sách</Label>
+                    <Input type="text" name="name" id="name" value={editedData.name} onChange={(e) => setEditedData({ ...editedData, name: e.target.value })} />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label for="price">Giá</Label>
+                    <Input type="text" name="price" id="price" value={editedData.price} onChange={(e) => setEditedData({ ...editedData, price: e.target.value })} />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label for="publish_year">Năm xuất bản</Label>
+                    <Input type="text" name="publish_year" id="publish_year" value={editedData.publish_year} onChange={(e) => setEditedData({ ...editedData, publish_year: e.target.value })} />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label for="publisher_id">Nhà xuất bản</Label>
+                    <Input type="select" name="publisher_id" id="publisher_id" value={editedData.publisher_id} onChange={(e) => setEditedData({ ...editedData, publisher_id: e.target.value })}>
+                      <option value="">Chọn nhà xuất bản</option>
+                      {/* Mapping qua danh sách các nhà xuất bản và tạo option cho mỗi nhà xuất bản */}
+                      {publishers.map(publisher => (
+                            <option key={publisher.id} value={publisher.id}>{publisher.name}</option>
+                          ))}
+                    </Input>
+                  </FormGroup>
+                </Col>
+              </Row>
+              <FormGroup>
+                <Label for="img">Hình ảnh</Label><br />
+                {/* {previewImg ? (
+                            <img src={previewImg} alt="Preview" style={{ width: '100px', height: '150px' }} />
+                        ) : (
+                            <img src={require(`../../assets/img/product/${editedData.img}`)} alt="Preview" style={{ width: '100px', height: '150px' }} />
+                        )} */}
+                {previewImg && <img src={previewImg} alt="Preview" style={{ width: '100px', height: '150px' }} />}
+                {!previewImg && editedData.img && <img src={require(`../../assets/img/product/${editedData.img}`)} alt="Current" style={{ width: '100px', height: '150px' }} />}
+                <Input type="file" name="img" id="img" onChange={handleEditFileChange} style={{marginTop: "10px"}}/>
+              </FormGroup>
+              <FormGroup>
+                <Label for="description">Mô tả</Label>
+                <Input type="textarea" name="description" id="description" value={editedData.description} onChange={(e) => setEditedData({ ...editedData, description: e.target.value })} />
+              </FormGroup>
+            </ModalBody>
+          <ModalFooter>
+            <Button color="primary" onClick={handleEdit}>Cập nhật</Button>{' '}
+            <Button color="secondary" onClick={() => setShowPopup(false)}>Hủy</Button>
           </ModalFooter>
         </Modal>
 
