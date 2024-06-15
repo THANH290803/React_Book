@@ -42,31 +42,52 @@ import {
   import React, { useState, useEffect } from 'react';
   import axios from 'axios';
   
-  const Employee = () => {
+  const Employee = () => { // http://127.0.0.1:8000/api/member
     const [employees, setEmpoyees] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(5);
+    const [itemsPerPage, setItemsPerPage] = useState(() => {
+      const storedValue = localStorage.getItem('itemsPerPage');
+      return storedValue !== null ? parseInt(storedValue) : 10; // Giá trị mặc định là 10 nếu không có trong localStorage
+  });
+    const [search, setSearch] = useState('');
+    const [filtered, setFiltered] = useState([]);
 
+    useEffect(() => {
+      localStorage.setItem('itemsPerPage', itemsPerPage.toString());
+    }, [itemsPerPage]);
+
+    // Function to fetch data from API
     const fetchData = async () => {
-      try {
-        const response = await axios.get('http://127.0.0.1:8000/api/member');
-        setEmpoyees(response.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
+        try {
+            const response = await axios.get('http://127.0.0.1:8000/api/member');
+            setEmpoyees(response.data);
+            setFiltered(response.data); // Initialize filteredBooks with all books
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
     };
 
     useEffect(() => {
-      fetchData();
+        fetchData();
     }, []);
 
     // Logic for pagination
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = employees.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filtered.slice(indexOfFirstItem, indexOfLastItem);
 
-    // Change page
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    // Handle search input change
+    const handleSearch = (e) => {
+        setSearch(e.target.value);
+        const filteredData = employees.filter((employee) =>
+            employee.username.toLowerCase().includes(e.target.value.toLowerCase()) ||
+            employee.email.toLowerCase().includes(e.target.value.toLowerCase()) ||
+            employee.address.toLowerCase().includes(e.target.value.toLowerCase()) ||
+            employee.phone_number.toLowerCase().includes(e.target.value.toLowerCase())
+        );
+        setFiltered(filteredData);
+        setCurrentPage(1); // Reset to first page when searching
+    };
 
 
     // Add
@@ -209,6 +230,29 @@ import {
                       <a className="btn btn-success" onClick={toggleModal}>Thêm nhân viên</a>
                     </div>
                 </CardHeader>
+                <div>
+                    <Label for="rowsPerPage" style={{ paddingRight: '10px', paddingLeft: '25px', display: 'inline-block' }}>Hàng trên mỗi trang</Label>
+                    <Input
+                        type="select"
+                        name="rowsPerPage"
+                        id="rowsPerPage"
+                        value={itemsPerPage}
+                        onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                        style={{ width: '80px', padding: '0px', height: '25px', marginRight: '10px', display: 'inline-block' }}
+                    >
+                        {[10, 15, 20, 25, 30, 35, 40, 45, 50].map((value) => (
+                            <option key={value} value={value}>{value}</option>
+                        ))}
+                    </Input>
+                    <Input
+                        type="text"
+                        placeholder="Tìm kiếm danh mục"
+                        value={search}
+                        onChange={handleSearch}
+                        className="mb-3"
+                        style={{ width: '500px', display: 'inline-block', float: 'right', marginRight: '25px' }}
+                    />
+                </div>
                 <Table className="align-items-center table-flush" responsive>
                   <thead className="thead-light">
                     <tr>

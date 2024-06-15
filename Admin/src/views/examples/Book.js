@@ -42,32 +42,53 @@ import {
   import Header from "components/Headers/Header.js";
   import React, { useState, useEffect } from 'react';
   import axios from 'axios';
+  import DataTable from 'react-data-table-component';
   
-  const Tables = () => {
+  const Book = () => {
     const [books, setBooks] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(5);
+    const [itemsPerPage, setItemsPerPage] = useState(() => {
+      const storedValue = localStorage.getItem('itemsPerPage');
+      return storedValue !== null ? parseInt(storedValue) : 10; // Giá trị mặc định là 10 nếu không có trong localStorage
+  });
+    const [search, setSearch] = useState('');
+    const [filtered, setFilteredBooks] = useState([]);
 
+    useEffect(() => {
+      localStorage.setItem('itemsPerPage', itemsPerPage.toString());
+    }, [itemsPerPage]);
+
+    // Function to fetch data from API
     const fetchData = async () => {
-      try {
-        const response = await axios.get('http://127.0.0.1:8000/api/book');
-        setBooks(response.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
+        try {
+            const response = await axios.get('http://127.0.0.1:8000/api/book');
+            setBooks(response.data);
+            setFilteredBooks(response.data); // Initialize filteredBooks with all books
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
     };
 
     useEffect(() => {
-      fetchData();
+        fetchData();
     }, []);
 
     // Logic for pagination
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = books.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filtered.slice(indexOfFirstItem, indexOfLastItem);
 
-    // Change page
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    // Handle search input change
+    const handleSearch = (e) => {
+        setSearch(e.target.value);
+        const filteredData = books.filter((book) =>
+            book.name.toLowerCase().includes(e.target.value.toLowerCase()) ||
+            book.isbn.toLowerCase().includes(e.target.value.toLowerCase()) ||
+            book.price.toLowerCase().includes(e.target.value.toLowerCase())
+        );
+        setFilteredBooks(filteredData);
+        setCurrentPage(1); // Reset to first page when searching
+    };
 
     // List Pubsiher
     const [publishers, setPublishers] = useState([]);
@@ -286,8 +307,24 @@ import {
         }
       };
 
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [selectedBook, setSelectedBook] = useState(null);
 
-  
+      const detailShow = async (id) => {
+          try {
+              const response = await axios.get(`http://127.0.0.1:8000/api/book/show/${id}`);
+              setData(response.data);
+              setSelectedBook(response.data);
+              setIsModalOpen(true); // Show the modal after data is fetched
+          } catch (error) {
+              console.error('Error fetching data:', error);
+          }
+      };
+
+      const closeModal = () => {
+          setIsModalOpen(false);
+          setSelectedBook(null);
+      };
 
     
     return (
@@ -295,6 +332,7 @@ import {
         <Header />
         {/* Page content */}
         <Container className="mt--7" fluid>
+          
           {/* Table */}
           <Row>
             <div className="col">
@@ -307,25 +345,48 @@ import {
                       <a className="btn btn-success" onClick={toggleModal}>Thêm sách</a>
                     </div>
                 </CardHeader>
+                <div>
+                    <Label for="rowsPerPage" style={{ paddingRight: '10px', paddingLeft: '25px', display: 'inline-block' }}>Hàng trên mỗi trang</Label>
+                    <Input
+                        type="select"
+                        name="rowsPerPage"
+                        id="rowsPerPage"
+                        value={itemsPerPage}
+                        onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                        style={{ width: '80px', padding: '0px', height: '25px', marginRight: '10px', display: 'inline-block' }}
+                    >
+                        {[10, 15, 20, 25, 30, 35, 40, 45, 50].map((value) => (
+                            <option key={value} value={value}>{value}</option>
+                        ))}
+                    </Input>
+                    <Input
+                        type="text"
+                        placeholder="Tìm kiếm danh mục"
+                        value={search}
+                        onChange={handleSearch}
+                        className="mb-3"
+                        style={{ width: '500px', display: 'inline-block', float: 'right', marginRight: '25px' }}
+                    />
+                </div>
                 <Table className="align-items-center table-flush" responsive>
                   <thead className="thead-light">
-                    <tr style={{textAlign: "center"}}>
+                    <tr>
                       <th scope="col">Hình ảnh</th>
                       <th scope="col">Isbn</th>
                       <th scope="col">Tên sách</th>
                       <th scope="col">Số lượng sách</th>
                       <th scope="col">Giá sách</th>
-                      <th scope="col">Tác giả</th>
+                      {/* <th scope="col">Tác giả</th>
                       <th scope="col">Năm xuất bản</th>
                       <th scope="col">Ngày tạo</th>
                       <th scope="col">Nhà sản xuất</th>
-                      <th scope="col">Danh mục</th>
+                      <th scope="col">Danh mục</th> */}
                       <th scope="col" />
                     </tr>
                   </thead>
                   <tbody>
                   {currentItems.map((book) => (
-                    <tr style={{textAlign: "center"}}>
+                    <tr>
                       <td scope="row">
                         <Media>
                           <Media>
@@ -339,21 +400,21 @@ import {
                       <th scope="row">
                         <Media className="align-items-center">
                           <Media>
-                            <a href="#"> 
+                            <a href="#" onClick={() => detailShow(book.id)}> 
                               <span className="mb-0 text-sm">
-                              {book.name}
-                            </span>
+                                {book.name}
+                              </span>
                             </a>
                           </Media>
                         </Media>
                       </th>
                       <th>{book.amount}</th>
                       <th>{book.price.toLocaleString('vi-VN')} VND</th>
-                      <th>{book.author}</th>
+                      {/* <th>{book.author}</th>
                       <th>{book.publish_year}</th>
                       <th>{book.created_at}</th>
                       <th>{book.category.name}</th>
-                      <th>{book.publisher.name}</th>
+                      <th>{book.publisher.name}</th> */}
                       <td className="text-right">
                         <UncontrolledDropdown>
                           <DropdownToggle
@@ -613,9 +674,61 @@ import {
           </ModalFooter>
         </Modal>
 
+         <Modal
+                isOpen={isModalOpen}
+                toggle={closeModal}
+                overlayClassName="modalOverlay"
+                className="modalContent"
+            >
+                <ModalHeader style={{ paddingBottom: "0px" }} toggle={closeModal}><h2>Chi tiết sách</h2></ModalHeader><br />
+                {selectedBook && (
+                <ModalBody style={{ paddingTop: "0px" }}>
+                  <Row>
+                    <Col md="6">
+                      <FormGroup>
+                        <p><strong>ISBN:</strong> {selectedBook.isbn}</p>
+                      </FormGroup>
+                      <FormGroup>
+                        <p><strong>Số lượng:</strong> {selectedBook.amount}</p>
+                      </FormGroup>
+                      <FormGroup>
+                      <p><strong>Tác giả:</strong> {selectedBook.author}</p>
+                      </FormGroup>
+                      <FormGroup>
+                      <p><strong>Danh mục:</strong> {selectedBook.category.name}</p>
+                      </FormGroup>
+                    </Col>
+                    <Col md="6">
+                      <FormGroup>
+                        <p><strong>Tên sách:</strong> {selectedBook.name}</p>
+                      </FormGroup>
+                      <FormGroup>
+                        <p><strong>Giá:</strong> {selectedBook.price.toLocaleString('vi-VN')} VND</p>
+                      </FormGroup>
+                      <FormGroup>
+                        <p><strong>Năm xuất bản:</strong> {selectedBook.publish_year}</p>
+                      </FormGroup>
+                      <FormGroup>
+                        <p><strong>Nhà sản xuất:</strong> {selectedBook.publisher.name}</p>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <FormGroup>
+                    <p><img src={require(`../../assets/img/product/${selectedBook.img}`)} width={'150px'} height={'200px'} /></p>
+                  </FormGroup>
+                  <FormGroup>
+                    <p><strong>Mô tả:</strong> {selectedBook.description}</p>
+                  </FormGroup>
+                </ModalBody>
+                )}
+                <ModalFooter>
+                    <Button color="secondary" onClick={closeModal}>Đóng</Button>
+                </ModalFooter>
+          </Modal>
+
       </>
     );
   };
   
-  export default Tables;
+  export default Book;
   

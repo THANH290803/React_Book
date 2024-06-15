@@ -1,10 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import Header from '../Component/Header';
 import Sidebar from '../Component/Sidebar';
 import Footer from '../Component/Footer';
 import { Link } from 'react-router-dom';
 
 function Index() {
+    const [books, setBooks] = useState([]);
+    const [randomBooks, setRandomBooks] = useState([]);
+
+    // Function to fetch data from API
+    const fetchData = async () => {
+        try {
+            const response = await axios.get('http://127.0.0.1:8000/api/book');
+            setBooks(response.data);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    const shuffleArray = (array) => {
+        return array.sort(() => Math.random() - 0.5);
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        if (books.length > 0) {
+            const shuffledBooks = shuffleArray([...books]);
+            setRandomBooks(shuffledBooks.slice(0, 6));
+        }
+    }, [books]);
+
     return (
         <>
             <Header />
@@ -45,15 +74,16 @@ function Index() {
                                         </div>
                                         <div className="col-sm-6">
                                             <img
-                                                src="images/home/girl1.jpg"
+                                                src="images/home/Banner1.jpg"
                                                 className="girl img-responsive"
                                                 alt=""
+                                                style={{paddingRight: '10px'}}
                                             />
-                                            <img
+                                            {/* <img
                                                 src="images/home/pricing.png"
                                                 className="pricing"
                                                 alt=""
-                                            />
+                                            /> */}
                                         </div>
                                     </div>
                                     <div className="item">
@@ -73,15 +103,16 @@ function Index() {
                                         </div>
                                         <div className="col-sm-6">
                                             <img
-                                                src="images/home/girl2.jpg"
+                                                src="images/home/Banner2.png"
                                                 className="girl img-responsive"
                                                 alt=""
+                                                style={{paddingRight: '10px'}}
                                             />
-                                            <img
+                                            {/* <img
                                                 src="images/home/pricing.png"
                                                 className="pricing"
                                                 alt=""
-                                            />
+                                            /> */}
                                         </div>
                                     </div>
                                     <div className="item">
@@ -101,15 +132,16 @@ function Index() {
                                         </div>
                                         <div className="col-sm-6">
                                             <img
-                                                src="images/home/girl3.jpg"
+                                                src="images/home/Banner3.png"
                                                 className="girl img-responsive"
                                                 alt=""
+                                                style={{paddingRight: '10px'}}
                                             />
-                                            <img
+                                            {/* <img
                                                 src="images/home/pricing.png"
                                                 className="pricing"
                                                 alt=""
-                                            />
+                                            /> */}
                                         </div>
                                     </div>
                                 </div>
@@ -140,15 +172,16 @@ function Index() {
                         <div className="col-sm-9 padding-right">
                             <div className="features_items">
                                 {/*features_items*/}
-                                <h2 className="title text-center">Mặt hàng nổi bật</h2>
-                                <div className="col-sm-4">
+                                <h2 className="title text-center">Sách mới</h2>
+                                {books.slice(0, 6).map((book, index) => (
+                                <div className="col-sm-4" key={index}>
                                     <div className="product-image-wrapper">
                                         <div className="single-products">
                                             <div className="productinfo text-center">
-                                                <Link to={'/product-detail'}>
-                                                    <img src={'images/home/product1.jpg'} alt="" />
-                                                    <h2>$56</h2>
-                                                    <p>Easy Polo Black Edition</p>
+                                                <Link to={'/product-detail/' + book.id}>
+                                                    <img src={'images/shop/' + book.img} alt="" style={{width: '150px',height: '220px'}}/>
+                                                    <h2>{book.price.toLocaleString('vi-VN')} VND</h2>
+                                                    <h4 style={{color: 'black'}}>{book.name}</h4>
                                                 </Link>
                                                 <a href="#" className="btn btn-default add-to-cart">
                                                     <i className="fa fa-shopping-cart" />
@@ -186,217 +219,10 @@ function Index() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="col-sm-4">
-                                    <div className="product-image-wrapper">
-                                        <div className="single-products">
-                                            <div className="productinfo text-center">
-                                                <img src="images/home/product2.jpg" alt="" />
-                                                <h2>$56</h2>
-                                                <p>Easy Polo Black Edition</p>
-                                                <a href="#" className="btn btn-default add-to-cart">
-                                                    <i className="fa fa-shopping-cart" />
-                                                    Add to cart
-                                                </a>
-                                            </div>
-                                            <div className="product-overlay">
-                                                <div className="overlay-content">
-                                                    <h2>$56</h2>
-                                                    <p>Easy Polo Black Edition</p>
-                                                    <a href="#" className="btn btn-default add-to-cart">
-                                                        <i className="fa fa-shopping-cart" />
-                                                        Add to cart
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="choose">
-                                            <ul className="nav nav-pills nav-justified">
-                                                <li>
-                                                    <a href="#">
-                                                        <i className="fa fa-plus-square" />
-                                                        Add to wishlist
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="#">
-                                                        <i className="fa fa-plus-square" />
-                                                        Add to compare
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-sm-4">
-                                    <div className="product-image-wrapper">
-                                        <div className="single-products">
-                                            <div className="productinfo text-center">
-                                                <img src="images/home/product3.jpg" alt="" />
-                                                <h2>$56</h2>
-                                                <p>Easy Polo Black Edition</p>
-                                                <a href="#" className="btn btn-default add-to-cart">
-                                                    <i className="fa fa-shopping-cart" />
-                                                    Add to cart
-                                                </a>
-                                            </div>
-                                            <div className="product-overlay">
-                                                <div className="overlay-content">
-                                                    <h2>$56</h2>
-                                                    <p>Easy Polo Black Edition</p>
-                                                    <a href="#" className="btn btn-default add-to-cart">
-                                                        <i className="fa fa-shopping-cart" />
-                                                        Add to cart
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="choose">
-                                            <ul className="nav nav-pills nav-justified">
-                                                <li>
-                                                    <a href="#">
-                                                        <i className="fa fa-plus-square" />
-                                                        Add to wishlist
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="#">
-                                                        <i className="fa fa-plus-square" />
-                                                        Add to compare
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-sm-4">
-                                    <div className="product-image-wrapper">
-                                        <div className="single-products">
-                                            <div className="productinfo text-center">
-                                                <img src="images/home/product4.jpg" alt="" />
-                                                <h2>$56</h2>
-                                                <p>Easy Polo Black Edition</p>
-                                                <a href="#" className="btn btn-default add-to-cart">
-                                                    <i className="fa fa-shopping-cart" />
-                                                    Add to cart
-                                                </a>
-                                            </div>
-                                            <div className="product-overlay">
-                                                <div className="overlay-content">
-                                                    <h2>$56</h2>
-                                                    <p>Easy Polo Black Edition</p>
-                                                    <a href="#" className="btn btn-default add-to-cart">
-                                                        <i className="fa fa-shopping-cart" />
-                                                        Add to cart
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            <img src="images/home/new.png" className="new" alt="" />
-                                        </div>
-                                        <div className="choose">
-                                            <ul className="nav nav-pills nav-justified">
-                                                <li>
-                                                    <a href="#">
-                                                        <i className="fa fa-plus-square" />
-                                                        Add to wishlist
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="#">
-                                                        <i className="fa fa-plus-square" />
-                                                        Add to compare
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-sm-4">
-                                    <div className="product-image-wrapper">
-                                        <div className="single-products">
-                                            <div className="productinfo text-center">
-                                                <img src="images/home/product5.jpg" alt="" />
-                                                <h2>$56</h2>
-                                                <p>Easy Polo Black Edition</p>
-                                                <a href="#" className="btn btn-default add-to-cart">
-                                                    <i className="fa fa-shopping-cart" />
-                                                    Add to cart
-                                                </a>
-                                            </div>
-                                            <div className="product-overlay">
-                                                <div className="overlay-content">
-                                                    <h2>$56</h2>
-                                                    <p>Easy Polo Black Edition</p>
-                                                    <a href="#" className="btn btn-default add-to-cart">
-                                                        <i className="fa fa-shopping-cart" />
-                                                        Add to cart
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            <img src="images/home/sale.png" className="new" alt="" />
-                                        </div>
-                                        <div className="choose">
-                                            <ul className="nav nav-pills nav-justified">
-                                                <li>
-                                                    <a href="#">
-                                                        <i className="fa fa-plus-square" />
-                                                        Add to wishlist
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="#">
-                                                        <i className="fa fa-plus-square" />
-                                                        Add to compare
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-sm-4">
-                                    <div className="product-image-wrapper">
-                                        <div className="single-products">
-                                            <div className="productinfo text-center">
-                                                <img src="images/home/product6.jpg" alt="" />
-                                                <h2>$56</h2>
-                                                <p>Easy Polo Black Edition</p>
-                                                <a href="#" className="btn btn-default add-to-cart">
-                                                    <i className="fa fa-shopping-cart" />
-                                                    Add to cart
-                                                </a>
-                                            </div>
-                                            <div className="product-overlay">
-                                                <div className="overlay-content">
-                                                    <h2>$56</h2>
-                                                    <p>Easy Polo Black Edition</p>
-                                                    <a href="#" className="btn btn-default add-to-cart">
-                                                        <i className="fa fa-shopping-cart" />
-                                                        Add to cart
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="choose">
-                                            <ul className="nav nav-pills nav-justified">
-                                                <li>
-                                                    <a href="#">
-                                                        <i className="fa fa-plus-square" />
-                                                        Add to wishlist
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="#">
-                                                        <i className="fa fa-plus-square" />
-                                                        Add to compare
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                             {/*features_items*/}
-                            <div className="category-tab">
-                                {/*category-tab*/}
+                            {/* <div className="category-tab">
                                 <div className="col-sm-12">
                                     <ul className="nav nav-tabs">
                                         <li className="active">
@@ -738,11 +564,10 @@ function Index() {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
                             {/*/category-tab*/}
                             <div className="recommended_items">
-                                {/*recommended_items*/}
-                                <h2 className="title text-center">Mặt hàng liên quan</h2>
+                                <h2 className="title text-center">Sách hot</h2>
                                 <div
                                     id="recommended-item-carousel"
                                     className="carousel slide"
@@ -750,6 +575,27 @@ function Index() {
                                 >
                                     <div className="carousel-inner">
                                         <div className="item active">
+                                        {randomBooks.map((book, index) => (
+                                            <div className="col-sm-4" key={index}>
+                                                <div className="product-image-wrapper">
+                                                    <div className="single-products">
+                                                        <div className="productinfo text-center">
+                                                            <Link to={'/product-detail/' + book.id}>
+                                                                <img src={'images/shop/' + book.img} alt="" style={{width: '150px',height: '220px'}}/>
+                                                                <h2>{book.price.toLocaleString('vi-VN')} VND</h2>
+                                                                <h4 style={{color: 'black'}}>{book.name}</h4>
+                                                            </Link>
+                                                            <a href="#" className="btn btn-default add-to-cart">
+                                                                <i className="fa fa-shopping-cart" />
+                                                                Thêm vào giỏ hàng
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        </div>
+                                        {/* <div className="item">
                                             <div className="col-sm-4">
                                                 <div className="product-image-wrapper">
                                                     <div className="single-products">
@@ -795,56 +641,9 @@ function Index() {
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="item">
-                                            <div className="col-sm-4">
-                                                <div className="product-image-wrapper">
-                                                    <div className="single-products">
-                                                        <div className="productinfo text-center">
-                                                            <img src="images/home/recommend1.jpg" alt="" />
-                                                            <h2>$56</h2>
-                                                            <p>Easy Polo Black Edition</p>
-                                                            <a href="#" className="btn btn-default add-to-cart">
-                                                                <i className="fa fa-shopping-cart" />
-                                                                Add to cart
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-sm-4">
-                                                <div className="product-image-wrapper">
-                                                    <div className="single-products">
-                                                        <div className="productinfo text-center">
-                                                            <img src="images/home/recommend2.jpg" alt="" />
-                                                            <h2>$56</h2>
-                                                            <p>Easy Polo Black Edition</p>
-                                                            <a href="#" className="btn btn-default add-to-cart">
-                                                                <i className="fa fa-shopping-cart" />
-                                                                Add to cart
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-sm-4">
-                                                <div className="product-image-wrapper">
-                                                    <div className="single-products">
-                                                        <div className="productinfo text-center">
-                                                            <img src="images/home/recommend3.jpg" alt="" />
-                                                            <h2>$56</h2>
-                                                            <p>Easy Polo Black Edition</p>
-                                                            <a href="#" className="btn btn-default add-to-cart">
-                                                                <i className="fa fa-shopping-cart" />
-                                                                Add to cart
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        </div> */}
                                     </div>
-                                    <a
+                                    {/* <a
                                         className="left recommended-item-control"
                                         href="#recommended-item-carousel"
                                         data-slide="prev"
@@ -857,7 +656,7 @@ function Index() {
                                         data-slide="next"
                                     >
                                         <i className="fa fa-angle-right" />
-                                    </a>
+                                    </a> */}
                                 </div>
                             </div>
                             {/*/recommended_items*/}

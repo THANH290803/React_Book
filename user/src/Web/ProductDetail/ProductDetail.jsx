@@ -1,9 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
 import Header from '../../Component/Header';
 import Sidebar from '../../Component/Sidebar';
 import Footer from '../../Component/Footer';
 
 function ProductDetail() {
+    const { id } = useParams();
+
+    const [books, setBooks] = useState([]);
+
+    // Function to fetch data from API
+    const fetchData = async () => {
+        try {
+            const response = await axios.get(`http://127.0.0.1:8000/api/book/show/${id}`);
+            setBooks(response.data);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const [recommendedItems, setRecommendedItems] = useState([]);
+    const [activeIndex, setActiveIndex] = useState(0);
+
+    useEffect(() => {
+        fetchRandomBooks();
+    }, []);
+
+    const fetchRandomBooks = () => {
+        axios.get('http://127.0.0.1:8000/api/book')
+            .then(response => {
+                setRecommendedItems(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching random books:', error);
+            });
+    };
+
+    const handlePrevSlide = () => {
+        setActiveIndex(prevIndex => {
+            if (prevIndex === 0) {
+                return recommendedItems.length - 3; // Lùi lại 3 quyển sách nếu đang ở slide đầu tiên
+            } else {
+                return prevIndex - 3; // Lùi lại 3 quyển sách
+            }
+        });
+    };
+
+    const handleNextSlide = () => {
+        setActiveIndex(prevIndex => {
+            if (prevIndex + 3 >= recommendedItems.length) {
+                return 0; // Quay lại slide đầu nếu đang ở slide cuối cùng
+            } else {
+                return prevIndex + 3; // Di chuyển sang 3 quyển sách tiếp theo
+            }
+        });
+    };
+
     return (
         <>
             <Header />
@@ -16,7 +73,7 @@ function ProductDetail() {
                                 {/*product-details*/}
                                 <div className="col-sm-5">
                                     <div className="view-product">
-                                        <img src="images/product-details/1.jpg" alt="" />
+                                        <img src={'/images/shop/' + books.img} alt="" />
                                         {/* <h3>ZOOM</h3> */}
                                     </div>
                                 </div>
@@ -28,26 +85,22 @@ function ProductDetail() {
                                             className="newarrival"
                                             alt=""
                                         />
-                                        <h2>Anne Klein Sleeveless Colorblock Scuba</h2>
-                                        <p>Web ID: 1089772</p>
-                                        <img src="images/product-details/rating.png" alt="" />
+                                        <h2>{books.name}</h2>
+                                        <p>ISBN: {books.isbn}</p>
+                                        {/* <img src="/images/product-details/rating.png" alt="" /> */}
                                         <span>
-                                            <span>US $59</span>
+                                            <span>{books.price && books.price.toLocaleString('vi-VN')} VND</span>
                                             <label>Quantity:</label>
                                             <input type="text" defaultValue={3} />
-                                            <button type="button" className="btn btn-fefault cart">
-                                                <i className="fa fa-shopping-cart" />
-                                                Add to cart
-                                            </button>
                                         </span>
                                         <p>
-                                            <b>Availability:</b> In Stock
+                                            <b>Tác giả:</b> {books.author}
                                         </p>
                                         <p>
-                                            <b>Condition:</b> New
+                                            <b>Năm xuất bản:</b> {books.publish_year}
                                         </p>
                                         <p>
-                                            <b>Brand:</b> E-SHOPPER
+                                            <b>Số lượng đã bán:</b> 0
                                         </p>
                                         {/* <a href="">
                                             <img
@@ -56,6 +109,10 @@ function ProductDetail() {
                                                 alt=""
                                             />
                                         </a> */}
+                                        <br />
+                                        <a type="button" className="btn btn-fefault cart" style={{margin: '0px', width: '355px'}}>
+                                            <i className="fa fa-shopping-cart" /> Thêm vào giỏ hàng
+                                        </a>
                                     </div>
                                     {/*/product-information*/}
                                 </div>
@@ -313,156 +370,50 @@ function ProductDetail() {
                                     <div className="tab-pane fade active in" id="reviews">
                                         <div className="col-sm-12">
                                             <p>
-                                                Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                                                sed do eiusmod tempor incididunt ut labore et dolore magna
-                                                aliqua.Ut enim ad minim veniam, quis nostrud exercitation
-                                                ullamco laboris nisi ut aliquip ex ea commodo consequat.Duis
-                                                aute irure dolor in reprehenderit in voluptate velit esse
-                                                cillum dolore eu fugiat nulla pariatur.
+                                                {books.description}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             {/*/category-tab*/}
-                            <div className="recommended_items">
-                                {/*recommended_items*/}
+                            {/* <div className="recommended-items">
                                 <h2 className="title text-center">Mặt hàng liên quan</h2>
-                                <div
-                                    id="recommended-item-carousel"
-                                    className="carousel slide"
-                                    data-ride="carousel"
-                                >
+                                <div id="recommended-item-carousel" className="carousel slide" data-ride="carousel">
                                     <div className="carousel-inner">
-                                        <div className="item active">
-                                            <div className="col-sm-4">
-                                                <div className="product-image-wrapper">
-                                                    <div className="single-products">
-                                                        <div className="productinfo text-center">
-                                                            <img src="images/home/recommend1.jpg" alt="" />
-                                                            <h2>$56</h2>
-                                                            <p>Easy Polo Black Edition</p>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-default add-to-cart"
-                                                            >
-                                                                <i className="fa fa-shopping-cart" />
-                                                                Add to cart
-                                                            </button>
+                                    {recommendedItems.length > 0 &&
+                                        recommendedItems.map((item, index) => (
+                                            <div key={index} className={`item ${index >= activeIndex && index < activeIndex + 3 ? 'active' : ''}`}>
+                                                    <div className="row">
+                                                    {index >= activeIndex && index < activeIndex + 3 && (
+                                                        <div className="col-sm-4">
+                                                            <div className="product-image-wrapper">
+                                                                <div className="single-products">
+                                                                    <div className="productinfo text-center">
+                                                                        <img src={`/images/shop/${item.img}`} alt="" style={{ width: '150px', height: '200px' }} />
+                                                                        <h2>{item.price && item.price.toLocaleString('vi-VN')} VND</h2>
+                                                                        <p>{item.name}</p>
+                                                                        <button type="button" className="btn btn-default add-to-cart">
+                                                                            <i className="fa fa-shopping-cart" />
+                                                                            Add to cart
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div className="col-sm-4">
-                                                <div className="product-image-wrapper">
-                                                    <div className="single-products">
-                                                        <div className="productinfo text-center">
-                                                            <img src="images/home/recommend2.jpg" alt="" />
-                                                            <h2>$56</h2>
-                                                            <p>Easy Polo Black Edition</p>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-default add-to-cart"
-                                                            >
-                                                                <i className="fa fa-shopping-cart" />
-                                                                Add to cart
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-sm-4">
-                                                <div className="product-image-wrapper">
-                                                    <div className="single-products">
-                                                        <div className="productinfo text-center">
-                                                            <img src="images/home/recommend3.jpg" alt="" />
-                                                            <h2>$56</h2>
-                                                            <p>Easy Polo Black Edition</p>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-default add-to-cart"
-                                                            >
-                                                                <i className="fa fa-shopping-cart" />
-                                                                Add to cart
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="item">
-                                            <div className="col-sm-4">
-                                                <div className="product-image-wrapper">
-                                                    <div className="single-products">
-                                                        <div className="productinfo text-center">
-                                                            <img src="images/home/recommend1.jpg" alt="" />
-                                                            <h2>$56</h2>
-                                                            <p>Easy Polo Black Edition</p>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-default add-to-cart"
-                                                            >
-                                                                <i className="fa fa-shopping-cart" />
-                                                                Add to cart
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-sm-4">
-                                                <div className="product-image-wrapper">
-                                                    <div className="single-products">
-                                                        <div className="productinfo text-center">
-                                                            <img src="images/home/recommend2.jpg" alt="" />
-                                                            <h2>$56</h2>
-                                                            <p>Easy Polo Black Edition</p>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-default add-to-cart"
-                                                            >
-                                                                <i className="fa fa-shopping-cart" />
-                                                                Add to cart
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-sm-4">
-                                                <div className="product-image-wrapper">
-                                                    <div className="single-products">
-                                                        <div className="productinfo text-center">
-                                                            <img src="images/home/recommend3.jpg" alt="" />
-                                                            <h2>$56</h2>
-                                                            <p>Easy Polo Black Edition</p>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-default add-to-cart"
-                                                            >
-                                                                <i className="fa fa-shopping-cart" />
-                                                                Add to cart
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                            ))}
                                     </div>
-                                    <a
-                                        className="left recommended-item-control"
-                                        href="#recommended-item-carousel"
-                                        data-slide="prev"
-                                    >
+                                    <a className="left recommended-item-control" href="#recommended-item-carousel" data-slide="prev" onClick={handlePrevSlide}>
                                         <i className="fa fa-angle-left" />
                                     </a>
-                                    <a
-                                        className="right recommended-item-control"
-                                        href="#recommended-item-carousel"
-                                        data-slide="next"
-                                    >
+                                    <a className="right recommended-item-control" href="#recommended-item-carousel" data-slide="next" onClick={handleNextSlide}>
                                         <i className="fa fa-angle-right" />
                                     </a>
                                 </div>
-                            </div>
+                            </div> */}
                             {/*/recommended_items*/}
                         </div>
                     </div>

@@ -35,22 +35,30 @@ import {
   Row,
   UncontrolledTooltip,
   Button,
-  Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input
+  Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input, CardBody, 
 } from "reactstrap";
 // core components
 import Header from "components/Headers/Header.js";
+import DataTable from 'react-data-table-component';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrashAlt, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
-const Category = () => {
-  const [categories, setCategoies] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+const Category = () => { 
+  const [categories, setCategories] = useState([]);
+  const [modal, setModal] = useState(false);
+  const [name, setName] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [editModal, setEditModal] = useState(false);
+  const [editedCategory, setEditedCategory] = useState(null);
+  const [search, setSearch] = useState('');
 
   const fetchData = async () => {
     try {
       const response = await axios.get('http://127.0.0.1:8000/api/category');
-      setCategoies(response.data);
+      setCategories(response.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -60,110 +68,116 @@ const Category = () => {
     fetchData();
   }, []);
 
-  // Logic for pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = categories.slice(indexOfFirstItem, indexOfLastItem);
-
-  // Change page
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  // Add
-
-  const [modal, setModal] = useState(false);
-  const [name, setName] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-
   const toggleModal = () => {
+    setName('');
+    setErrorMessage('');
+    setModal(!modal);
+  };
+
+  const toggleEditModal = () => {
+    setEditModal(!editModal);
+  };
+
+  const addCategory = async () => {
+    try {
+      await axios.post('http://127.0.0.1:8000/api/category/add', { name });
       setName('');
-      setModal(!modal);
-  };
-
-  const addPayment = async () => {
-      try {
-          await axios.post('http://127.0.0.1:8000/api/category/add', { name });
-          setName('');
-          setErrorMessage('');
-          fetchData();
-          toggleModal(); // Đóng modal sau khi thêm thành công
-      } catch (error) {
-          if (error.response) {
-          if (error.response.status === 409) {
-              // Xử lý lỗi trùng lặp
-              setErrorMessage('Danh mục đã tồn tại.');
-          } else if (error.response.status === 422) {
-              // Xử lý lỗi xác thực
-              console.error('Lỗi xác thực:', error.response.data.errors);
-              setErrorMessage(Object.values(error.response.data.errors).flat().join('\n'));
-          } else {
-              console.error('Lỗi khi thêm phương thức thanh toán:', error);
-              setErrorMessage('Đã xảy ra lỗi. Vui lòng thử lại.');
-          }
-          // Xóa thông báo lỗi sau 3 giây
-          setTimeout(() => {
-              setErrorMessage('');
-          }, 3000);
-          } else {
-          console.error('Lỗi khi thêm phương thức thanh toán:', error);
-          setErrorMessage('Đã xảy ra lỗi. Vui lòng thử lại.');
-          }
-      }
-  };
-
-  // Edit
-  const [showPopup, setShowPopup] = useState(false);
-  const [Data, setData] = useState(null);
-  const [editedData, setEditedData] = useState({
-    name: '',
-  });
-
-  const fetchDataById = async (id) => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/category/edit/${id}`);
-        setShowPopup(true);
-        setData(response.data);
-        setEditedData(response.data); // Set edited data with fetched data
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-   };
-
-   const handleEdit = async () => {
-      try {
-        // Send edited data to API for updating
-        await axios.put(`http://127.0.0.1:8000/api/category/update/${Data.id}`, editedData);
-        // Close popup and reset state
-        setShowPopup(false);
-        setData(null);
-        setEditedData({});
-        setErrorMessage(''); 
-        fetchData();
-      } catch (error) {
-          if (error.response && error.response.status === 409) {
-              // Hiển thị thông báo lỗi từ phản hồi của server
-              setErrorMessage(error.response.data.message);
-              // Đặt hẹn giờ để xóa thông báo sau 3 giây
-              setTimeout(() => {
-                  setErrorMessage('');
-              }, 3000);
-          } else {
-              // Xử lý các loại lỗi khác
-              console.error('Lỗi khi cập nhật thông tin danh mục:', error);
-          }
-      }
-    };
-
-    // Delete
-    const deleteData = async (id) => {
-      try {
-      await axios.delete(`http://127.0.0.1:8000/api/category/delete/${id}`);
-      // After successful deletion, refresh the publisher list or perform other actions
+      setErrorMessage('');
       fetchData();
-      } catch (error) {
-      console.error('Error deleting publisher:', error);
+      toggleModal();
+    } catch (error) {
+      if (error.response) {
+        if (error.response.status === 409) {
+          setErrorMessage('Danh mục đã tồn tại.');
+        } else if (error.response.status === 422) {
+          setErrorMessage(Object.values(error.response.data.errors).flat().join('\n'));
+        } else {
+          setErrorMessage('Đã xảy ra lỗi. Vui lòng thử lại.');
+        }
+      } else {
+        setErrorMessage('Đã xảy ra lỗi. Vui lòng thử lại.');
       }
+    }
   };
 
+  const editCategory = async () => {
+    try {
+      await axios.put(`http://127.0.0.1:8000/api/category/update/${editedCategory.id}`, { name: editedCategory.name });
+      fetchData();
+      toggleEditModal();
+    } catch (error) {
+      if (error.response && error.response.status === 409) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        console.error('Lỗi khi cập nhật thông tin danh mục:', error);
+      }
+    }
+  };
+
+  const deleteCategory = async (id) => {
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/category/delete/${id}`);
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+    }
+  };
+
+  const columns = [
+    {
+      name: 'TÊN DANH MỤC',
+      selector: row => row.name,
+      sortable: true,
+    },
+    {
+      name: '',
+      cell: row => (
+        <>
+          <UncontrolledDropdown>
+          <DropdownToggle color="secondary" size="sm">
+            <FontAwesomeIcon icon={faEllipsisV} />
+          </DropdownToggle>
+          <DropdownMenu right>
+            <DropdownItem onClick={() => { setEditedCategory(row); toggleEditModal(); }} style={{color: 'orange'}}>
+              <FontAwesomeIcon icon={faEdit} className="mr-2" /> Sửa danh mục
+            </DropdownItem>
+            <DropdownItem onClick={() => deleteCategory(row.id)} style={{color: 'red'}}>
+              <FontAwesomeIcon icon={faTrashAlt} className="mr-2" /> Xóa danh mục
+            </DropdownItem>
+          </DropdownMenu>
+        </UncontrolledDropdown>
+        </>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+  ];
+  
+
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const customStyles = {
+    header: {
+      style: {
+        fontSize: '16px',
+        fontWeight: 'bold',
+        backgroundColor: '#007bff',
+        color: '#fff',
+      },
+    },
+    rows: {
+      style: {
+        fontSize: '14px',
+        cursor: 'pointer',
+        '&:hover': {
+          backgroundColor: '#f1f1f1',
+        },
+      },
+    },
+  };
 
   return (
     <>
@@ -182,64 +196,25 @@ const Category = () => {
                       <a className="btn btn-success" onClick={toggleModal}>Thêm danh mục</a>
                     </div>
                 </CardHeader>
-              <Table className="align-items-center table-flush" responsive>
-                <thead className="thead-light">
-                  <tr>
-                    <th scope="col">Tên danh mục</th>
-                    <th scope="col" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((category) => (
-                  <tr>
-                    <th scope="row">
-                      <Media className="align-items-center">
-                        <Media>
-                          <a href="#"> 
-                            <span className="mb-0 text-sm">
-                            {category.name}
-                          </span>
-                          </a>
-                        </Media>
-                      </Media>
-                    </th>
-                    <td className="text-right">
-                      <UncontrolledDropdown>
-                        <DropdownToggle
-                          className="btn-icon-only text-light"
-                          href="#pablo"
-                          role="button"
-                          size="sm"
-                          color=""
-                          onClick={(e) => e.preventDefault()}
-                        >
-                          <i className="fas fa-ellipsis-v" />
-                        </DropdownToggle>
-                        <DropdownMenu className="dropdown-menu-arrow" right>
-                          <DropdownItem
-                            onClick={() => fetchDataById(category.id)}
-                          >
-                            Sửa danh mục
-                          </DropdownItem>
-                          <DropdownItem
-                            onClick={() => deleteData(category.id)}
-                          >
-                            Xoá danh mục
-                          </DropdownItem>
-                          {/* <DropdownItem
-                            href="#pablo"
-                            onClick={(e) => e.preventDefault()}
-                          >
-                            Something else here
-                          </DropdownItem> */}
-                        </DropdownMenu>
-                      </UncontrolledDropdown>
-                    </td>
-                  </tr>
-                  ))}
-                </tbody>
-              </Table>
-              <CardFooter className="py-4">
+                <CardBody>
+                  <Input
+                    type="text"
+                    placeholder="Tìm kiếm danh mục"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="mb-3"
+                    style={{width: '500px', float: 'right'}}
+                  />
+                  <DataTable
+                    columns={columns}
+                    data={filteredCategories}
+                    pagination
+                    noHeader
+                    responsive
+                    customStyles={customStyles} // Nếu có customStyles khác
+                  />
+                </CardBody>
+              {/* <CardFooter className="py-4">
                   <nav aria-label="...">
                     <Pagination
                       className="pagination justify-content-end mb-0"
@@ -296,52 +271,51 @@ const Category = () => {
                       </PaginationItem>
                     </Pagination>
                   </nav>
-              </CardFooter>
+              </CardFooter> */}
             </Card>
           </div>
         </Row>
       </Container>
 
       <Modal isOpen={modal} toggle={toggleModal}>
-        <ModalHeader style={{paddingBottom: "0px"}} toggle={toggleModal}><h2>Thêm danh mục</h2></ModalHeader>
-        <ModalBody style={{paddingTop: "0px"}}>
-          <FormGroup>
-                {errorMessage && (
-                <div style={{ color: 'red', padding: '10px', backgroundColor: '#ffe6e6', marginBottom: '10px' }}>
-                  {errorMessage}
-                </div>
-              )}
-          </FormGroup>
-          <FormGroup>
-            <Label for="name">Tên danh mục</Label>
-            <Input type="text" name="name" id="name" value={name} onChange={(e) => setName(e.target.value)} />
-          </FormGroup>
-        </ModalBody>
-        <ModalFooter style={{paddingTop: "0px"}}>
-          <Button color="primary" onClick={addPayment}>Thêm</Button>{' '}
-          <Button color="secondary" onClick={toggleModal}>Hủy</Button>
-        </ModalFooter>
-      </Modal>
-
-      {/* // Edit */}
-      <Modal isOpen={showPopup} toggle={() => setShowPopup(false)}>
-        <ModalHeader style={{paddingBottom: "0px"}} toggle={() => setShowPopup(false)}><h2>Sửa danh mục</h2></ModalHeader>
+        <ModalHeader toggle={toggleModal}>
+          <h2>Thêm danh mục</h2>
+        </ModalHeader>
         <ModalBody>
-        <FormGroup>
+          <FormGroup>
             {errorMessage && (
               <div style={{ color: 'red', padding: '10px', backgroundColor: '#ffe6e6', marginBottom: '10px' }}>
                 {errorMessage}
               </div>
             )}
-          </FormGroup>
-          <FormGroup>
             <Label for="name">Tên danh mục</Label>
-            <Input type="text" name="name" id="name" value={editedData.name} onChange={(e) => setEditedData({ ...editedData, name: e.target.value })} />
+            <Input type="text" name="name" id="name" value={name} onChange={(e) => setName(e.target.value)} />
           </FormGroup>
         </ModalBody>
         <ModalFooter>
-          <Button color="primary" onClick={handleEdit}>Cập nhật</Button>{' '}
-          <Button color="secondary" onClick={() => setShowPopup(false)}>Hủy</Button>
+          <Button color="primary" onClick={addCategory}>Thêm</Button>{' '}
+          <Button color="secondary" onClick={toggleModal}>Hủy</Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={editModal} toggle={toggleEditModal}>
+        <ModalHeader toggle={toggleEditModal}>
+          <h2>Sửa danh mục</h2>
+        </ModalHeader>
+        <ModalBody>
+          <FormGroup>
+            {errorMessage && (
+              <div style={{ color: 'red', padding: '10px', backgroundColor: '#ffe6e6', marginBottom: '10px' }}>
+                {errorMessage}
+              </div>
+            )}
+            <Label for="editName">Tên danh mục</Label>
+            <Input type="text" name="editName" id="editName" value={editedCategory ? editedCategory.name : ''} onChange={(e) => setEditedCategory({ ...editedCategory, name: e.target.value })} />
+          </FormGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="primary" onClick={editCategory}>Cập nhật</Button>{' '}
+          <Button color="secondary" onClick={toggleEditModal}>Hủy</Button>
         </ModalFooter>
       </Modal>
     </>

@@ -69,7 +69,7 @@ function Header() {
                             <div className="col-sm-4">
                                 <div className="logo pull-left">
                                     <a href="index.html">
-                                        <img src="images/home/logo.png" alt="" />
+                                        <img src="/images/home/logo.png" alt="" />
                                     </a>
                                 </div>
                             </div>

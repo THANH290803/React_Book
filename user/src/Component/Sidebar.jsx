@@ -1,13 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Link, useLocation } from 'react-router-dom';
 
 function Sidebar() {
+    // Categories
+    const [categories, setCategories] = useState([]);
+
+    const fetchDataCat = async () => {
+        try {
+        const response = await axios.get('http://127.0.0.1:8000/api/category');
+        setCategories(response.data);
+        } catch (error) {
+        console.error('Error fetching data:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchDataCat();
+    }, []);
+
+    const location = useLocation();
+    const selectedCategoryId = location.pathname.split('/').pop();
+
     return (
         <div className="col-sm-3">
             <div className="left-sidebar">
                 <h2>Danh mục</h2>
                 <div className="panel-group category-products" id="accordian">
                     {/*category-productsr*/}
-                    <div className="panel panel-default">
+                    {/* <div className="panel panel-default">
                         <div className="panel-heading">
                             <h4 className="panel-title">
                                 <a
@@ -132,60 +153,20 @@ function Sidebar() {
                                 </ul>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
+                    {categories.map((category) => (
                     <div className="panel panel-default">
                         <div className="panel-heading">
                             <h4 className="panel-title">
-                                <a href="#">Kids</a>
+                                <Link to={`/bookbycategories/${category.id}`} href="#" key={category.id}
+                                style={{ color: category.id.toString() === selectedCategoryId ? 'orange' : 'black' }}>{category.name}</Link>
                             </h4>
                         </div>
                     </div>
-                    <div className="panel panel-default">
-                        <div className="panel-heading">
-                            <h4 className="panel-title">
-                                <a href="#">Fashion</a>
-                            </h4>
-                        </div>
-                    </div>
-                    <div className="panel panel-default">
-                        <div className="panel-heading">
-                            <h4 className="panel-title">
-                                <a href="#">Households</a>
-                            </h4>
-                        </div>
-                    </div>
-                    <div className="panel panel-default">
-                        <div className="panel-heading">
-                            <h4 className="panel-title">
-                                <a href="#">Interiors</a>
-                            </h4>
-                        </div>
-                    </div>
-                    <div className="panel panel-default">
-                        <div className="panel-heading">
-                            <h4 className="panel-title">
-                                <a href="#">Clothing</a>
-                            </h4>
-                        </div>
-                    </div>
-                    <div className="panel panel-default">
-                        <div className="panel-heading">
-                            <h4 className="panel-title">
-                                <a href="#">Bags</a>
-                            </h4>
-                        </div>
-                    </div>
-                    <div className="panel panel-default">
-                        <div className="panel-heading">
-                            <h4 className="panel-title">
-                                <a href="#">Shoes</a>
-                            </h4>
-                        </div>
-                    </div>
+                    ))}
                 </div>
                 {/*/category-products*/}
-                <div className="brands_products">
-                    {/*brands_products*/}
+                {/* <div className="brands_products">
                     <h2>Nhà xuất bản</h2>
                     <div className="brands-name">
                         <ul className="nav nav-pills nav-stacked">
@@ -234,10 +215,10 @@ function Sidebar() {
                             </li>
                         </ul>
                     </div>
-                </div>
+                </div> */}
                 <div className="shipping text-center">
                     {/*shipping*/}
-                    <img src={'images/home/shipping.jpg'} alt="" />
+                    <img src={'/images/home/shipping.jpg'} alt="" />
                 </div>
                 {/*/shipping*/}
             </div>
