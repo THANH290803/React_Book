@@ -120,7 +120,7 @@ import {
                     </Input>
                     <Input
                         type="text"
-                        placeholder="Tìm kiếm danh mục"
+                        placeholder="Tìm kiếm khách hàng"
                         value={search}
                         onChange={handleSearch}
                         className="mb-3"

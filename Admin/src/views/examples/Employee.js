@@ -112,7 +112,7 @@ import {
 
     const addData = async () => {
         try {
-            await axios.post('http://127.0.0.1:8000/api/member/add', { 
+            await axios.post('http://127.0.0.1:8000/api/register', { 
               username,
               phone_number,
               email,
@@ -213,6 +213,9 @@ import {
       }
   };
 
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user'));
+
     return (
       <>
         <Header />
@@ -226,9 +229,11 @@ import {
                     <div style={{ flex: "1" }}>
                       <h3 className="mb-0" style={{ paddingBottom: "10px" }}>Quản lý nhân viên</h3>
                     </div>
+                    {user.role !== 2 && (
                     <div>
                       <a className="btn btn-success" onClick={toggleModal}>Thêm nhân viên</a>
                     </div>
+                    )}
                 </CardHeader>
                 <div>
                     <Label for="rowsPerPage" style={{ paddingRight: '10px', paddingLeft: '25px', display: 'inline-block' }}>Hàng trên mỗi trang</Label>
@@ -246,7 +251,7 @@ import {
                     </Input>
                     <Input
                         type="text"
-                        placeholder="Tìm kiếm danh mục"
+                        placeholder="Tìm kiếm nhân viên"
                         value={search}
                         onChange={handleSearch}
                         className="mb-3"
@@ -266,7 +271,7 @@ import {
                   </thead>
                   <tbody>
                   {currentItems.map((employee) => (
-                    <tr>
+                    <tr key={employee.id}>
                       <th scope="row">
                         <Media className="align-items-center">
                           <Media>
@@ -293,6 +298,7 @@ import {
                       })()}
                       </td>
                       <td className="text-right">
+                      {user.role !== 2 && (
                         <UncontrolledDropdown>
                           <DropdownToggle
                             className="btn-icon-only text-light"
@@ -323,6 +329,7 @@ import {
                             </DropdownItem> */}
                           </DropdownMenu>
                         </UncontrolledDropdown>
+                      )}
                       </td>
                     </tr>
                     ))}

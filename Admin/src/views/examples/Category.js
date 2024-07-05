@@ -123,6 +123,9 @@ const Category = () => {
     }
   };
 
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user'));
+
   const columns = [
     {
       name: 'TÊN DANH MỤC',
@@ -133,6 +136,7 @@ const Category = () => {
       name: '',
       cell: row => (
         <>
+        {user.role !== 2 && (
           <UncontrolledDropdown>
           <DropdownToggle color="secondary" size="sm">
             <FontAwesomeIcon icon={faEllipsisV} />
@@ -146,6 +150,7 @@ const Category = () => {
             </DropdownItem>
           </DropdownMenu>
         </UncontrolledDropdown>
+        )}
         </>
       ),
       ignoreRowClick: true,
@@ -192,9 +197,11 @@ const Category = () => {
                     <div style={{ flex: "1" }}>
                       <h3 className="mb-0" style={{ paddingBottom: "10px" }}>Quản lý danh mục</h3>
                     </div>
+                    {user.role !== 2 && (
                     <div>
                       <a className="btn btn-success" onClick={toggleModal}>Thêm danh mục</a>
                     </div>
+                    )}
                 </CardHeader>
                 <CardBody>
                   <Input

@@ -166,8 +166,8 @@ import {
             }
         };
 
-
-
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user'));
 
     return (
       <>
@@ -182,9 +182,11 @@ import {
                     <div style={{ flex: "1" }}>
                       <h3 className="mb-0" style={{ paddingBottom: "10px" }}>Quản lý phương thức thanh toán</h3>
                     </div>
+                    {user.role !== 2 && (
                     <div>
                       <a className="btn btn-success" onClick={toggleModal}>Thêm phương thức thanh toán</a>
                     </div>
+                    )}
                 </CardHeader>
                 <Table className="align-items-center table-flush" responsive>
                   <thead className="thead-light">
@@ -208,6 +210,7 @@ import {
                         </Media>
                       </th>
                       <td className="text-right">
+                      {user.role !== 2 && (
                         <UncontrolledDropdown>
                           <DropdownToggle
                             className="btn-icon-only text-light"
@@ -238,6 +241,7 @@ import {
                             </DropdownItem> */}
                           </DropdownMenu>
                         </UncontrolledDropdown>
+                      )}
                       </td>
                     </tr>
                     ))}

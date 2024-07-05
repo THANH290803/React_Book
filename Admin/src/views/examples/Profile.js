@@ -31,11 +31,79 @@ import {
 } from "reactstrap";
 // core components
 import UserHeader from "components/Headers/UserHeader.js";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Profile = () => {
+  const token = localStorage.getItem('token');
+  const initialUserData = JSON.parse(localStorage.getItem('user'));
+  const [userData, setUserData] = useState(initialUserData);
+  const [updatedUserData, setUpdatedUserData] = useState({
+    ...initialUserData,
+  });
+  const [isEditing, setIsEditing] = useState(false); // State để quản lý chế độ chỉnh sửa
+
+  useEffect(() => {
+    setUpdatedUserData({ ...userData });
+  }, [userData]);
+
+  // Xử lý khi người dùng bấm nút chỉnh sửa
+  const handleEdit = () => {
+    setIsEditing(true); // Cho phép chỉnh sửa
+  };
+
+  // Xử lý khi người dùng bấm nút cập nhật
+  const handleUpdate = async () => {
+    try {
+      // Gửi dữ liệu đã chỉnh sửa lên server
+      await axios.put(`http://127.0.0.1:8000/api/member/update/${userData.id}`, updatedUserData);
+
+      // Cập nhật lại thông tin người dùng trong localStorage và state
+      localStorage.setItem('user', JSON.stringify(updatedUserData));
+      setUserData(updatedUserData);
+
+      setIsEditing(false); // Tắt chế độ chỉnh sửa
+      window.location.reload();
+    } catch (error) {
+      console.error('Lỗi khi cập nhật thông tin người dùng:', error);
+    }
+  };
+
   return (
     <>
-      <UserHeader />
+      <>
+        <div
+          className="header pb-8 pt-5 pt-lg-8 d-flex align-items-center"
+          style={{
+            minHeight: "600px",
+            backgroundImage:
+              "url(" + require("../../assets/img/theme/profile-cover.jpg") + ")",
+            backgroundSize: "cover",
+            backgroundPosition: "center top",
+          }}
+        >
+          {/* Mask */}
+          <span className="mask bg-gradient-default opacity-8" />
+          {/* Header container */}
+          <Container className="d-flex align-items-center" fluid>
+            <Row>
+              <Col lg="7" md="10">
+                <h1 className="display-2 text-white">Xin chào!</h1>
+                <p className="text-white mt-0 mb-5">
+                  Đây là trang hồ sơ của bạn. Bạn có thể thấy được thông tin chi tiết của bạn
+                </p>
+                <Button
+                  color="info"
+                  onClick={isEditing ? handleUpdate : handleEdit}
+                >
+                  {isEditing ? 'Lưu thay đổi' : 'Chỉnh sửa'}
+                </Button>
+
+              </Col>
+            </Row>
+          </Container>
+        </div>
+      </>
       {/* Page content */}
       <Container className="mt--7" fluid>
         <Row>
@@ -63,7 +131,7 @@ const Profile = () => {
                     onClick={(e) => e.preventDefault()}
                     size="sm"
                   >
-                    Connect
+                    Kết nối
                   </Button>
                   <Button
                     className="float-right"
@@ -72,7 +140,7 @@ const Profile = () => {
                     onClick={(e) => e.preventDefault()}
                     size="sm"
                   >
-                    Message
+                    Tin nhắn
                   </Button>
                 </div>
               </CardHeader>
@@ -80,7 +148,7 @@ const Profile = () => {
                 <Row>
                   <div className="col">
                     <div className="card-profile-stats d-flex justify-content-center mt-md-5">
-                      <div>
+                      {/* <div>
                         <span className="heading">22</span>
                         <span className="description">Friends</span>
                       </div>
@@ -91,36 +159,35 @@ const Profile = () => {
                       <div>
                         <span className="heading">89</span>
                         <span className="description">Comments</span>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </Row>
                 <div className="text-center">
                   <h3>
-                    Jessica Jones
-                    <span className="font-weight-light">, 27</span>
+                    {userData.username}
+                    {/* <span className="font-weight-light">, 27</span> */}
                   </h3>
-                  <div className="h5 font-weight-300">
+                  <div className="h4 font-weight-300">
                     <i className="ni location_pin mr-2" />
-                    Bucharest, Romania
+                    {(() => {
+                      if (userData.role === 1) {
+                        return 'Admin';
+                      } else if (userData.role === 2) {
+                        return 'Nhân viên';
+                      } else {
+                        return 'Unknown';
+                      }
+                    })()}
                   </div>
-                  <div className="h5 mt-4">
+                  {/* <div className="h5 mt-4">
                     <i className="ni business_briefcase-24 mr-2" />
                     Solution Manager - Creative Tim Officer
                   </div>
                   <div>
                     <i className="ni education_hat mr-2" />
                     University of Computer Science
-                  </div>
-                  <hr className="my-4" />
-                  <p>
-                    Ryan — the name taken by Melbourne-raised, Brooklyn-based
-                    Nick Murphy — writes, performs and records all of his own
-                    music.
-                  </p>
-                  <a href="#pablo" onClick={(e) => e.preventDefault()}>
-                    Show more
-                  </a>
+                  </div> */}
                 </div>
               </CardBody>
             </Card>
@@ -130,16 +197,15 @@ const Profile = () => {
               <CardHeader className="bg-white border-0">
                 <Row className="align-items-center">
                   <Col xs="8">
-                    <h3 className="mb-0">My account</h3>
+                    <h3 className="mb-0">Tài khoản</h3>
                   </Col>
                   <Col className="text-right" xs="4">
                     <Button
                       color="primary"
-                      href="#pablo"
-                      onClick={(e) => e.preventDefault()}
+                      onClick={handleEdit}
                       size="sm"
                     >
-                      Settings
+                      Cài đặt
                     </Button>
                   </Col>
                 </Row>
@@ -147,7 +213,7 @@ const Profile = () => {
               <CardBody>
                 <Form>
                   <h6 className="heading-small text-muted mb-4">
-                    User information
+                    Thông tin người dùng
                   </h6>
                   <div className="pl-lg-4">
                     <Row>
@@ -161,10 +227,12 @@ const Profile = () => {
                           </label>
                           <Input
                             className="form-control-alternative"
-                            defaultValue="lucky.jesse"
+                            value={userData.username}
+                            onChange={(e) => setUserData({ ...userData, username: e.target.value })}
                             id="input-username"
                             placeholder="Username"
                             type="text"
+                            disabled={!isEditing}
                           />
                         </FormGroup>
                       </Col>
@@ -174,13 +242,16 @@ const Profile = () => {
                             className="form-control-label"
                             htmlFor="input-email"
                           >
-                            Email address
+                            Địa chỉ Email
                           </label>
                           <Input
                             className="form-control-alternative"
                             id="input-email"
-                            placeholder="jesse@example.com"
+                            value={userData.email}
+                            onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                            placeholder="Email của bạn"
                             type="email"
+                            disabled={!isEditing}
                           />
                         </FormGroup>
                       </Col>
@@ -192,14 +263,16 @@ const Profile = () => {
                             className="form-control-label"
                             htmlFor="input-first-name"
                           >
-                            First name
+                            Số điện thoại
                           </label>
                           <Input
                             className="form-control-alternative"
-                            defaultValue="Lucky"
+                            value={userData.phone_number}
                             id="input-first-name"
-                            placeholder="First name"
+                            placeholder="Số điện thoại của bạn"
                             type="text"
+                            onChange={(e) => setUserData({ ...userData, phone_number: e.target.value })}
+                            disabled={!isEditing}
                           />
                         </FormGroup>
                       </Col>
@@ -209,22 +282,54 @@ const Profile = () => {
                             className="form-control-label"
                             htmlFor="input-last-name"
                           >
-                            Last name
+                            Vai trò
                           </label>
                           <Input
                             className="form-control-alternative"
-                            defaultValue="Jesse"
+                            value={
+                              (() => {
+                                if (userData.role === 1) {
+                                  return 'Admin';
+                                } else if (userData.role === 2) {
+                                  return 'Nhân viên';
+                                } else {
+                                  return 'Unknown';
+                                }
+                              })()
+                            }
                             id="input-last-name"
-                            placeholder="Last name"
+                            placeholder="Vai trò"
                             type="text"
+                            readOnly={true}
+                          />
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col md="12">
+                        <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="input-address"
+                          >
+                            Địa chỉ
+                          </label>
+                          <Input
+                            className="form-control-alternative"
+                            value={userData.address}
+                            onChange={(e) => setUserData({ ...userData, address: e.target.value })}
+                            id="input-address"
+                            placeholder="Địa chỉ của bạn"
+                            type="text"
+                            disabled={!isEditing}
                           />
                         </FormGroup>
                       </Col>
                     </Row>
                   </div>
-                  <hr className="my-4" />
+                  {/* <hr className="my-4" /> */}
                   {/* Address */}
-                  <h6 className="heading-small text-muted mb-4">
+                  {/* <h6 className="heading-small text-muted mb-4">
                     Contact information
                   </h6>
                   <div className="pl-lg-4">
@@ -235,84 +340,31 @@ const Profile = () => {
                             className="form-control-label"
                             htmlFor="input-address"
                           >
-                            Address
+                            Địa chỉ
                           </label>
                           <Input
                             className="form-control-alternative"
                             defaultValue="Bld Mihail Kogalniceanu, nr. 8 Bl 1, Sc 1, Ap 09"
                             id="input-address"
-                            placeholder="Home Address"
+                            placeholder="Địa chỉ của bạn"
                             type="text"
                           />
                         </FormGroup>
                       </Col>
                     </Row>
-                    <Row>
-                      <Col lg="4">
-                        <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="input-city"
-                          >
-                            City
-                          </label>
-                          <Input
-                            className="form-control-alternative"
-                            defaultValue="New York"
-                            id="input-city"
-                            placeholder="City"
-                            type="text"
-                          />
-                        </FormGroup>
-                      </Col>
-                      <Col lg="4">
-                        <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="input-country"
-                          >
-                            Country
-                          </label>
-                          <Input
-                            className="form-control-alternative"
-                            defaultValue="United States"
-                            id="input-country"
-                            placeholder="Country"
-                            type="text"
-                          />
-                        </FormGroup>
-                      </Col>
-                      <Col lg="4">
-                        <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="input-country"
-                          >
-                            Postal code
-                          </label>
-                          <Input
-                            className="form-control-alternative"
-                            id="input-postal-code"
-                            placeholder="Postal code"
-                            type="number"
-                          />
-                        </FormGroup>
-                      </Col>
-                    </Row>
-                  </div>
+                  </div> */}
                   <hr className="my-4" />
                   {/* Description */}
-                  <h6 className="heading-small text-muted mb-4">About me</h6>
+                  <h6 className="heading-small text-muted mb-4">Thông tin thêm</h6>
                   <div className="pl-lg-4">
                     <FormGroup>
-                      <label>About Me</label>
+                      <label>Thông tin thêm</label>
                       <Input
                         className="form-control-alternative"
-                        placeholder="A few words about you ..."
+                        placeholder="Đôi lời về bạn..."
                         rows="4"
-                        defaultValue="A beautiful Dashboard for Bootstrap 4. It is Free and
-                        Open Source."
                         type="textarea"
+                        disabled={!isEditing}
                       />
                     </FormGroup>
                   </div>

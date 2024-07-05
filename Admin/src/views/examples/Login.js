@@ -31,8 +31,40 @@ import {
   Row,
   Col,
 } from "reactstrap";
-
+import React, { useState } from 'react';
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 const Login = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+          const response = await axios.post('http://127.0.0.1:8000/api/login', {
+              email,
+              password,
+          });
+          console.log(response.data);
+
+          if (response.data.user.role === 3) {
+            console.error('User with role 3 is not allowed to login.');
+            // Xử lý thông báo cho người dùng về việc không được phép đăng nhập
+            return;
+          }
+
+
+          localStorage.setItem('token', response.data.token);
+          localStorage.setItem('role', response.data.user.role)
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+          navigate('/admin/index'); // Chuyển hướng đến trang admin
+      } catch (error) {
+          console.error('Login failed:', error);
+          // Xử lý lỗi đăng nhập, ví dụ: hiển thị thông báo lỗi cho người dùng
+      }
+  };
+
   return (
     <>
       <Col lg="5" md="7">
@@ -41,7 +73,7 @@ const Login = () => {
             <div className="text-center text-muted mb-4">
               <big>Đăng nhập</big>
             </div>
-            <Form role="form">
+            <Form onSubmit={handleSubmit} role="form">
               <FormGroup className="mb-3">
                 <InputGroup className="input-group-alternative">
                   <InputGroupAddon addonType="prepend">
@@ -49,7 +81,8 @@ const Login = () => {
                       <i className="ni ni-email-83" />
                     </InputGroupText>
                   </InputGroupAddon>
-                  <Input
+                  <Input value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email"
                     type="email"
                     autoComplete="new-email"
@@ -63,7 +96,8 @@ const Login = () => {
                       <i className="ni ni-lock-circle-open" />
                     </InputGroupText>
                   </InputGroupAddon>
-                  <Input
+                  <Input value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
                     type="password"
                     autoComplete="new-password"
@@ -84,7 +118,7 @@ const Login = () => {
                 </label>
               </div>
               <div className="text-center">
-                <Button className="my-4" color="primary" type="button">
+                <Button type="submit" className="my-4" color="primary">
                   Đăng nhập
                 </Button>
               </div>

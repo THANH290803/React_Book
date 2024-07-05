@@ -203,6 +203,9 @@ import {
         console.error('Error deleting publisher:', error);
       }
     };
+
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
     
     return (
       <>
@@ -215,9 +218,11 @@ import {
                     <div style={{ flex: "1" }}>
                       <h3 className="mb-0" style={{ paddingBottom: "10px" }}>Quản lý nhà xuất bản</h3>
                     </div>
+                    {user.role !== 2 && (
                     <div>
                       <a className="btn btn-success" onClick={toggleModal}>Thêm nhà xuất bản</a>
                     </div>
+                    )}
                 </CardHeader>
                 <div>
                     <Label for="rowsPerPage" style={{ paddingRight: '10px', paddingLeft: '25px', display: 'inline-block' }}>Hàng trên mỗi trang</Label>
@@ -235,7 +240,7 @@ import {
                     </Input>
                     <Input
                         type="text"
-                        placeholder="Tìm kiếm danh mục"
+                        placeholder="Tìm kiếm nhà xuất bản"
                         value={search}
                         onChange={handleSearch}
                         className="mb-3"
@@ -260,6 +265,7 @@ import {
                         <td>{publisher.phone_number}</td>
                         <td>{publisher.address}</td>
                         <td className="text-right">
+                        {user.role !== 2 && (
                           <UncontrolledDropdown>
                             <DropdownToggle
                               className="btn-icon-only text-light"
@@ -290,6 +296,7 @@ import {
                               </DropdownItem> */}
                             </DropdownMenu>
                           </UncontrolledDropdown>
+                        )}
                         </td>
                       </tr>
                     ))}

@@ -33,8 +33,37 @@ import {
   Container,
   Media,
 } from "reactstrap";
+import React, { useEffect, useState } from 'react';
+import { useLocation, Route, Routes, Navigate, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const AdminNavbar = (props) => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (userData) {
+      setUser(userData);
+    }
+  }, []);
+
+  if (!user) {
+      return <div>Đang tải...</div>;
+  }
+
+  const handleLogOut = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('user');
+      navigate('/login');
+  };
+
+  const role = localStorage.getItem('role');
+  console.log("Role from localStorage:", role); // Debugging line
+  const roleText = role === '1' ? 'Admin' : role === '2' ? 'Nhân viên' : 'Unknown';
+  
+
   return (
     <>
       <Navbar className="navbar-top navbar-dark" expand="md" id="navbar-main">
@@ -69,7 +98,7 @@ const AdminNavbar = (props) => {
                   </span>
                   <Media className="ml-2 d-none d-lg-block">
                     <span className="mb-0 text-sm font-weight-bold">
-                      Jessica Jones
+                      {user.username} / {roleText}
                     </span>
                   </Media>
                 </Media>
@@ -95,7 +124,7 @@ const AdminNavbar = (props) => {
                   <span>Support</span>
                 </DropdownItem> */}
                 <DropdownItem divider />
-                <DropdownItem to="/auth/login" tag={Link}>
+                <DropdownItem onClick={handleLogOut}>
                   <i className="ni ni-user-run" />
                   <span>Logout</span>
                 </DropdownItem>
