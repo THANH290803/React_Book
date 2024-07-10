@@ -13,6 +13,7 @@ function ProductByCategory() {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
+    const [selectedAuthors, setSelectedAuthors] = useState([]);
     const [productCounts, setProductCounts] = useState({
         '0-100': 0,
         '100-200': 0,
@@ -96,6 +97,13 @@ function ProductByCategory() {
             });
         }
 
+        if (selectedAuthors.length > 0) {
+            filteredProducts = filteredProducts.filter(product => {
+                const bookAuthors = product.author.split(',').map(author => author.trim());
+                return selectedAuthors.some(selectedAuthor => bookAuthors.includes(selectedAuthor));
+            });
+        }
+
         return filteredProducts;
     };
 
@@ -166,6 +174,108 @@ function ProductByCategory() {
     for (let i = 1; i <= Math.ceil(sortedProducts.length / itemsPerPage); i++) {
         pageNumbers.push(i);
     }
+
+    const [authors, setAuthors] = useState([]);
+
+    // Fetch unique authors
+    // const fetchAuthors = async () => {
+    //     try {
+    //         const res = await axios.get('http://127.0.0.1:8000/api/authors');
+    //         const authorsData = res.data || [];
+
+    //         // Fetch book counts for each author
+    //         const authorsWithBookCounts = await Promise.all(authorsData.map(async (author) => {
+    //             const bookCountRes = await axios.get(`http://127.0.0.1:8000/api/books/count?author=${author}`);
+    //             const bookCount = bookCountRes.data.count || 0;
+
+    //             return {
+    //                 name: author,
+    //                 bookCount: bookCount
+    //             };
+    //         }));
+
+    //         setAuthors(authorsWithBookCounts);
+    //     } catch (error) {
+    //         console.error('Error fetching authors: ', error);
+    //     }
+    // };
+
+    const fetchAuthors = async () => {
+        try {
+            const res = await axios.get('http://127.0.0.1:8000/api/authors');
+            const authorsData = res.data || [];
+
+            // Split multiple authors and count individually
+            const authorCounts = {};
+            authorsData.forEach(authorString => {
+                authorString.split(',').map(author => author.trim()).forEach(author => {
+                    authorCounts[author] = (authorCounts[author] || 0) + 1;
+                });
+            });
+
+            const authorsWithBookCounts = Object.entries(authorCounts).map(([author, count]) => ({
+                name: author,
+                bookCount: count,
+            }));
+
+            setAuthors(authorsWithBookCounts);
+        } catch (error) {
+            console.error('Error fetching authors: ', error);
+        }
+    };
+
+    // useEffect to fetch authors when component mounts
+    useEffect(() => {
+        fetchAuthors();
+    }, []);
+
+    // Handle author checkbox change
+    const handleAuthorChange = (event) => {
+        const authorName = event.target.value;
+        setSelectedAuthors((prevAuthors) =>
+            prevAuthors.includes(authorName)
+                ? prevAuthors.filter((author) => author !== authorName)
+                : [...prevAuthors, authorName]
+        );
+    };
+
+    // Add to cart
+    const [user, setUser] = useState(null);
+    const [cartItems, setCartItems] = useState([]);
+    const [userId, setuserId] = useState(null);
+
+    useEffect(() => {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (userData) {
+            setUser(userData);
+            setuserId(userData.id); // Set member ID from user data
+        }
+    }, []);
+
+    const addToCart = async (product) => {
+        if (!userId) {
+            alert('User not logged in');
+            return;
+        }
+
+        try {
+            const response = await axios.post('http://127.0.0.1:8000/api/cart', {
+                user_id: userId,
+                items: [
+                    {
+                        book_id: product.id,
+                        quantity: 1
+                    }
+                ]
+            });
+            console.log(response.data);
+            setCartItems([...cartItems, product]);
+            alert('Added to cart successfully!');
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            alert('Failed to add to cart. Please try again.');
+        }
+    };
 
     return (
         <>
@@ -279,6 +389,40 @@ function ProductByCategory() {
                             </form>
                         </div>
                         {/* Price End */}
+                        <div className="border-bottom mb-4 pb-4">
+                            <h5 className="font-weight-semi-bold mb-4">Lọc theo tác giả</h5>
+                            <form>
+                                {authors.map(author => (
+                                    // <div key={author} className="custom-control custom-checkbox mb-3">
+                                    //     <input
+                                    //         type="checkbox"
+                                    //         className="custom-control-input"
+                                    //         id={`author-${author}`}
+                                    //         value={author}
+                                    //         onChange={handleAuthorChange}
+                                    //     />
+                                    //     <label className="custom-control-label" htmlFor={`author-${author}`}>
+                                    //         {author}
+                                    //     </label>
+                                    //     <span class="badge border font-weight-normal">1000</span>
+                                    // </div>
+                                    <div className="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3" key={author.name}>
+                                        <input
+                                            type="checkbox"
+                                            className="custom-control-input"
+                                            id={`author-${author.name}`}
+                                            checked={selectedAuthors.includes(author.name)}
+                                            value={author.name}
+                                            onChange={handleAuthorChange}
+                                        />
+                                        <label className="custom-control-label" htmlFor={`author-${author.name}`}>
+                                            {author.name}
+                                        </label>
+                                        <span className="badge border font-weight-normal">{author.bookCount}</span>
+                                    </div>
+                                ))}
+                            </form>
+                        </div>
                     </div>
                     {/* Shop Sidebar End */}
                     {/* Shop Product Start */}
@@ -344,40 +488,47 @@ function ProductByCategory() {
                                 </div>
                             </div>
                             {displayProducts.length > 0 ? (
-                                displayProducts.map((product) => (
-                                    <div className="col-lg-4 col-md-6 col-sm-12 pb-1" key={product.id}>
-                                        <div className="card product-item border-0 mb-4">
-                                            <div className="card-header product-img position-relative overflow-hidden bg-transparent border p-0" style={{ textAlign: 'center' }}>
-                                                <img className="img-fluid" src={product.img} alt="" style={{ width: '250px', height: '376px' }} />
-                                            </div>
-                                            <div className="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                                                <h6 className="text-truncate mb-3">{product.name}</h6>
-                                                <div className="d-flex justify-content-center">
-                                                    <h6>{product.price.toLocaleString('vi-VN')} VND</h6>
-                                                    {/* <h6 className="text-muted ml-2">
+                                displayProducts.map(product => {
+                                    if (product.amount > 0) {
+                                        return (
+                                            <>
+                                                <div className="col-lg-4 col-md-6 col-sm-12 pb-1" key={product.id}>
+                                                    <div className="card product-item border-0 mb-4">
+                                                        <div className="card-header product-img position-relative overflow-hidden bg-transparent border p-0" style={{ textAlign: 'center' }}>
+                                                            <img className="img-fluid" src={product.img} alt="" style={{ width: '250px', height: '376px' }} />
+                                                        </div>
+                                                        <div className="card-body border-left border-right text-center p-0 pt-4 pb-3">
+                                                            <h6 className="text-truncate mb-3">{product.name}</h6>
+                                                            <div className="d-flex justify-content-center">
+                                                                <h6>{product.price.toLocaleString('vi-VN')} VND</h6>
+                                                                {/* <h6 className="text-muted ml-2">
                                                 <del>$123.00</del>
                                             </h6> */}
+                                                            </div>
+                                                        </div>
+                                                        <div className="card-footer d-flex justify-content-between bg-light border">
+                                                            <Link to={'/detail/' + product.id} className="btn btn-sm text-dark p-0">
+                                                                <i className="fas fa-eye text-primary mr-1" />
+                                                                Xem chi tiết
+                                                            </Link>
+                                                            <a type='button' className="btn btn-sm text-dark p-0" onClick={() => addToCart(product)}>
+                                                                <i className="fas fa-shopping-cart text-primary mr-1" />
+                                                                Thêm vào giỏ hàng
+                                                            </a>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="card-footer d-flex justify-content-between bg-light border">
-                                                <Link to={'/detail/' + product.id} className="btn btn-sm text-dark p-0">
-                                                    <i className="fas fa-eye text-primary mr-1" />
-                                                    Xem chi tiết
-                                                </Link>
-                                                <a href="" className="btn btn-sm text-dark p-0">
-                                                    <i className="fas fa-shopping-cart text-primary mr-1" />
-                                                    Thêm vào giỏ hàng
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
+                                            </>
+                                        );
+                                    }
+
+                                })
                             ) : (
-                                <p style={{ marginLeft: '550px' }}>No products found</p>
+                                <p style={{ marginLeft: '550px' }}>Không có sản phẩm đó</p>
                             )}
                             <div className="col-12 pb-1">
                                 <nav aria-label="Page navigation">
-                                    <ul className="pagination justify-content-center mb-3">
+                                    <ul className="pagination mb-3" style={{ float: 'right' }}>
                                         <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                                             <a className="page-link" href="#" aria-label="Previous" onClick={(e) => handleClick(e, currentPage - 1)}>
                                                 <span aria-hidden="true">«</span>

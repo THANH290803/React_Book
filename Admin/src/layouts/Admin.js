@@ -62,8 +62,8 @@ const Admin = (props) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const user = localStorage.getItem('user');
+    if (!user) {
       navigate('/login');
     }
   }, []);

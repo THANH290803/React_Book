@@ -198,7 +198,7 @@ function Cart() {
                                         <th>Sản phẩm</th>
                                         <th>Giá</th>
                                         <th>Số lượng</th>
-                                        <th>Tổng tiền</th>
+                                        <th>Thành tiền</th>
                                         <th>Xoá</th>
                                     </tr>
                                 </thead>
@@ -230,7 +230,7 @@ function Cart() {
                                                         value={item.quantity}
                                                     />
                                                     <div className="input-group-btn">
-                                                        <button className="btn btn-sm btn-primary btn-plus" onClick={() => handleIncreaseQuantity(item.id, item.quantity)}>
+                                                        <button className="btn btn-sm btn-primary btn-plus" onClick={() => handleIncreaseQuantity(item.id, item.quantity)} disabled={item.quantity >= item.book.amount}>
                                                             <i className="fa fa-plus" />
                                                         </button>
                                                     </div>

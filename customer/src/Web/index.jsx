@@ -8,7 +8,7 @@ import HeaderPage from "../Component/HeaderPage";
 
 function Index() {
     const [newProducts, setNewProducts] = useState([]);
-    const [randomProducts, setRandomProducts] = useState([]);
+    const [hotProducts, setHotProducts] = useState([]);
 
     const fetchProducts = async () => {
         try {
@@ -18,42 +18,47 @@ function Index() {
             // Giới hạn số lượng sản phẩm mới hiển thị thành 8
             const newProductsList = products.slice(0, 8);
             setNewProducts(newProductsList);
-
-            // Lọc ra các sản phẩm ngẫu nhiên không trùng với sản phẩm mới
-            const remainingProducts = products.slice(8);
-            const shuffledProducts = remainingProducts.sort(() => 0.5 - Math.random());
-            setRandomProducts(shuffledProducts.slice(0, 8));
         } catch (error) {
             console.error('Error fetching data: ', error);
         }
     };
 
+    const fetchHotProducts = async () => {
+        try {
+            const response = await axios.get('http://127.0.0.1:8000/api/book/hotBook');
+            setHotProducts(response.data);
+        } catch (error) {
+            console.error('Error fetching hot products: ', error);
+        }
+    };
+
     useEffect(() => {
         fetchProducts();
+        fetchHotProducts();
     }, []);
 
     // Add to cart
     const [user, setUser] = useState(null);
     const [cartItems, setCartItems] = useState([]);
-    const [memberId, setMemberId] = useState(null);
+    const [userId, setuserId] = useState(null);
 
     useEffect(() => {
         const userData = JSON.parse(localStorage.getItem('user'));
         if (userData) {
             setUser(userData);
-            setMemberId(userData.id); // Set member ID from user data
+            setuserId(userData.id); // Set member ID from user data
         }
     }, []);
 
     const addToCart = async (product) => {
-        if (!memberId) {
+        if (!userId) {
             alert('User not logged in');
             return;
         }
 
         try {
             const response = await axios.post('http://127.0.0.1:8000/api/cart', {
-                member_id: memberId,
+                user_id: userId,
                 items: [
                     {
                         book_id: product.id,
@@ -69,7 +74,7 @@ function Index() {
             alert('Failed to add to cart. Please try again.');
         }
     };
-    
+
 
     return (
         <>
@@ -202,34 +207,47 @@ function Index() {
                     </h2>
                 </div>
                 <div className="row px-xl-5 pb-3">
-                    {newProducts.map((product) => (
-                        <div className="col-lg-3 col-md-6 col-sm-12 pb-1" key={product.id}>
-                            <div className="card product-item border-0 mb-4">
-                                <div className="card-header product-img position-relative overflow-hidden bg-transparent border p-0" style={{ textAlign: 'center' }}>
-                                    <img className="img-fluid" src={product.img} alt="" style={{ width: '250px', height: '376px' }} />
-                                </div>
-                                <div className="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                                    <h6 className="text-truncate mb-3">{product.name}</h6>
-                                    <div className="d-flex justify-content-center">
-                                        <h6>{product.price.toLocaleString('vi-VN')} VND</h6>
-                                        {/* <h6 className="text-muted ml-2">
+                    {newProducts.map(product => {
+                        if (product.amount > 0) {
+                            return (
+                                <>
+                                    <div className="col-lg-3 col-md-6 col-sm-12 pb-1" key={product.id}>
+                                        <div className="card product-item border-0 mb-4">
+                                            <div className="card-header product-img position-relative overflow-hidden bg-transparent border p-0" style={{ textAlign: 'center' }}>
+                                                <img className="img-fluid" src={product.img} alt="" style={{ width: '250px', height: '376px' }} />
+                                            </div>
+                                            <div className="card-body border-left border-right text-center p-0 pt-4 pb-3">
+                                                <h6 className="text-truncate mb-3">{product.name}</h6>
+                                                <div className="d-flex justify-content-center">
+                                                    <h6>{product.price.toLocaleString('vi-VN')} VND</h6>
+                                                    {/* <h6 className="text-muted ml-2">
                                         <del>$123.00</del>
                                     </h6> */}
+                                                </div>
+                                            </div>
+                                            <div className="card-footer d-flex justify-content-between bg-light border">
+                                                <Link to={'/detail/' + product.id} className="btn btn-sm text-dark p-0">
+                                                    <i className="fas fa-eye text-primary mr-1" />
+                                                    Xem chi tiết
+                                                </Link>
+                                                {product.amount > 0 ? (
+                                                    <a type='button' onClick={() => addToCart(product)} className="btn btn-sm text-dark p-0">
+                                                        <i className="fas fa-shopping-cart text-primary mr-1" />
+                                                        Thêm vào giỏ hàng
+                                                    </a>
+                                                ) : (
+                                                    <button type="button" className="btn btn-sm text-dark p-0" disabled>
+                                                        <i className="fas fa-shopping-cart text-muted mr-1" />
+                                                        Hết hàng
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="card-footer d-flex justify-content-between bg-light border">
-                                    <Link to={'/detail/' + product.id} className="btn btn-sm text-dark p-0">
-                                        <i className="fas fa-eye text-primary mr-1" />
-                                        Xem chi tiết
-                                    </Link>
-                                    <a type='button' onClick={() => addToCart(product)} className="btn btn-sm text-dark p-0">
-                                        <i className="fas fa-shopping-cart text-primary mr-1" />
-                                        Thêm vào giỏ hàng
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                                </>
+                            );
+                        }
+                    })}
                 </div>
             </div>
             {/* Products End */}
@@ -275,34 +293,47 @@ function Index() {
                     </h2>
                 </div>
                 <div className="row px-xl-5 pb-3">
-                    {randomProducts.map((product) => (
-                        <div className="col-lg-3 col-md-6 col-sm-12 pb-1" key={product.id}>
-                            <div className="card product-item border-0 mb-4">
-                                <div className="card-header product-img position-relative overflow-hidden bg-transparent border p-0" style={{ textAlign: 'center' }}>
-                                    <img className="img-fluid" src={product.img} alt="" style={{ width: '250px', height: '376px' }} />
-                                </div>
-                                <div className="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                                    <h6 className="text-truncate mb-3">{product.name}</h6>
-                                    <div className="d-flex justify-content-center">
-                                        <h6>{product.price.toLocaleString('vi-VN')} VND</h6>
-                                        {/* <h6 className="text-muted ml-2">
+                    {hotProducts.map(product => {
+                        if (product.amount > 0) {
+                            return (
+                                <>
+                                    <div className="col-lg-3 col-md-6 col-sm-12 pb-1" key={product.id}>
+                                        <div className="card product-item border-0 mb-4">
+                                            <div className="card-header product-img position-relative overflow-hidden bg-transparent border p-0" style={{ textAlign: 'center' }}>
+                                                <img className="img-fluid" src={product.img} alt="" style={{ width: '250px', height: '376px' }} />
+                                            </div>
+                                            <div className="card-body border-left border-right text-center p-0 pt-4 pb-3">
+                                                <h6 className="text-truncate mb-3">{product.name}</h6>
+                                                <div className="d-flex justify-content-center">
+                                                    <h6>{product.price.toLocaleString('vi-VN')} VND</h6>
+                                                    {/* <h6 className="text-muted ml-2">
                                         <del>$123.00</del>
                                     </h6> */}
+                                                </div>
+                                            </div>
+                                            <div className="card-footer d-flex justify-content-between bg-light border">
+                                                <Link to={'/detail/' + product.id} className="btn btn-sm text-dark p-0">
+                                                    <i className="fas fa-eye text-primary mr-1" />
+                                                    Xem chi tiết
+                                                </Link>
+                                                {product.amount > 0 ? (
+                                                    <a type='button' onClick={() => addToCart(product)} className="btn btn-sm text-dark p-0">
+                                                        <i className="fas fa-shopping-cart text-primary mr-1" />
+                                                        Thêm vào giỏ hàng
+                                                    </a>
+                                                ) : (
+                                                    <button type="button" className="btn btn-sm text-dark p-0" disabled>
+                                                        <i className="fas fa-shopping-cart text-muted mr-1" />
+                                                        Hết hàng
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="card-footer d-flex justify-content-between bg-light border">
-                                    <a href="" className="btn btn-sm text-dark p-0">
-                                        <i className="fas fa-eye text-primary mr-1" />
-                                        Xem chi tiết
-                                    </a>
-                                    <a href="" className="btn btn-sm text-dark p-0">
-                                        <i className="fas fa-shopping-cart text-primary mr-1" />
-                                        Thêm vào giỏ hàng
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                                </>
+                            );
+                        }
+                    })}
                 </div>
             </div>
             {/* Products End */}

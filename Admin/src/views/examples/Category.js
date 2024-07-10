@@ -44,9 +44,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import Login from "./Login";
 
 
-const Category = () => { 
+const Category = () => {
   const [categories, setCategories] = useState([]);
   const [modal, setModal] = useState(false);
   const [name, setName] = useState('');
@@ -125,6 +126,11 @@ const Category = () => {
 
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
+
+  // Nếu không có user, điều hướng tới trang login
+  if (!user) {
+    return <Login />;
+  }
 
   const columns = [
     {

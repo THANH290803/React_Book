@@ -25,38 +25,49 @@ function Detail() {
         fetchProduct();
     }, [id]);
 
+    const [quantity, setQuantity] = useState(1);
+
+    const handleIncrease = () => {
+        setQuantity(quantity + 1);
+    };
+
+    const handleDecrease = () => {
+        if (quantity > 1) {
+            setQuantity(quantity - 1);
+        }
+    };
 
     // Add to cart
     const [user, setUser] = useState(null);
     const [cartItems, setCartItems] = useState([]);
-    const [memberId, setMemberId] = useState(null);
-    
+    const [userId, setuserId] = useState(null);
+
     useEffect(() => {
         const userData = JSON.parse(localStorage.getItem('user'));
         if (userData) {
             setUser(userData);
-            setMemberId(userData.id); // Set member ID from user data
+            setuserId(userData.id); // Set member ID from user data
         }
     }, []);
 
     const addToCart = async (product) => {
-        if (!memberId) {
+        if (!userId) {
             alert('User not logged in');
             return;
         }
 
         try {
             const response = await axios.post('http://127.0.0.1:8000/api/cart', {
-                member_id: memberId,
+                user_id: userId,
                 items: [
                     {
                         book_id: product.id,
-                        quantity: 1
+                        quantity: quantity
                     }
                 ]
             });
             console.log(response.data);
-            setCartItems([...cartItems, product]);
+            setCartItems([...cartItems, product, quantity]);
             alert('Added to cart successfully!');
         } catch (error) {
             console.error('Error adding to cart:', error);
@@ -68,7 +79,7 @@ function Detail() {
         return <div>Product not found or error occurred.</div>;
     }
 
-    
+
 
     return (
         <>
@@ -101,12 +112,12 @@ function Detail() {
                         >
                             <div className="carousel-inner border">
                                 {/* <div className="carousel-item"> */}
-                                    <img
-                                        // className="w-100 h-100"
-                                        src={product.img}
-                                        alt="Image"
-                                        style={{width: '648px', height: '750px'}}
-                                    />
+                                <img
+                                    // className="w-100 h-100"
+                                    src={product.img}
+                                    alt="Image"
+                                    style={{ width: '648px', height: '750px' }}
+                                />
                                 {/* </div> */}
                             </div>
                             {/* <a
@@ -128,33 +139,27 @@ function Detail() {
                     <div className="col-lg-7 pb-5">
                         <h3 className="font-weight-semi-bold">{product.name}</h3>
                         <div className="d-flex mb-3">
-                            <div className="text-primary mr-2">
-                                <small className="fas fa-star" />
-                                <small className="fas fa-star" />
-                                <small className="fas fa-star" />
-                                <small className="fas fa-star-half-alt" />
-                                <small className="far fa-star" />
-                            </div>
-                            <small className="pt-1">(50 Reviews)</small>
+                            Danh mục: {product.category.name}
                         </div>
                         <h3 className="font-weight-semi-bold mb-4">{product.price.toLocaleString('vi-VN')} VND</h3>
                         {/* <p className="mb-4"> */}
-                            <div className="mb-4" dangerouslySetInnerHTML={{ __html: product.description }} />
+                        <div className="mb-4" dangerouslySetInnerHTML={{ __html: product.description }} />
                         {/* </p> */}
                         <div className="d-flex align-items-center mb-4 pt-2">
                             <div className="input-group quantity mr-3" style={{ width: 130 }}>
                                 <div className="input-group-btn">
-                                    <button className="btn btn-primary btn-minus">
+                                    <button className="btn btn-primary btn-minus" onClick={handleDecrease}>
                                         <i className="fa fa-minus" />
                                     </button>
                                 </div>
                                 <input
                                     type="text"
                                     className="form-control bg-secondary text-center"
-                                    defaultValue={1}
+                                    value={quantity}
+                                    readOnly
                                 />
                                 <div className="input-group-btn">
-                                    <button className="btn btn-primary btn-plus">
+                                    <button className="btn btn-primary btn-plus" onClick={handleIncrease}>
                                         <i className="fa fa-plus" />
                                     </button>
                                 </div>
@@ -221,16 +226,16 @@ function Detail() {
                                 <div className="row">
                                     <div className="col-md-6">
                                         <ul className="list-group list-group-flush">
+                                        <li className="list-group-item px-0">
+                                                <strong style={{ paddingRight: '201px' }}>ISBN</strong>
+                                                <span>{product.isbn}</span>
+                                            </li>
                                             <li className="list-group-item px-0">
-                                                <strong style={{paddingRight: '250px'}}>Tác giả: </strong> <span>{product.author}</span>
+                                                <strong style={{ paddingRight: '180px' }}>Tác giả </strong><span>{product.author}</span>
                                             </li>
                                             {/* <li className="list-group-item px-0">
                                                 Năm xuất bản:
                                             </li> */}
-                                            <li className="list-group-item px-0">
-                                                <strong style={{paddingRight: '201px'}}>Nhà xuất bản: </strong>
-                                                <span>{product.publisher.name}</span>
-                                            </li>
                                             {/* <li className="list-group-item px-0">
                                                 Danh mục:
                                             </li> */}
@@ -238,13 +243,17 @@ function Detail() {
                                     </div>
                                     <div className="col-md-6">
                                         <ul className="list-group list-group-flush">
+                                            {/* <li className="list-group-item px-0">
+                                                <strong style={{ paddingRight: '263px' }}>Danh mục</strong>
+                                                <span><strong>:</strong> {product.category.name}</span>
+                                            </li> */}
                                             <li className="list-group-item px-0">
-                                                <strong style={{paddingRight: '250px'}}>Năm xuất bản: </strong>
-                                                <span>{product.publish_year}</span>
+                                                <strong style={{ paddingRight: '255px' }}>Nhà xuất bản</strong>
+                                                <span>{product.publisher.name}</span>
                                             </li>
                                             <li className="list-group-item px-0">
-                                                <strong style={{paddingRight: '263px'}}>Danh mục:</strong>
-                                                <span>{product.category.name}</span>
+                                                <strong style={{ paddingRight: '250px' }}>Năm xuất bản</strong>
+                                                <span>{product.publish_year}</span>
                                             </li>
                                             {/* <li className="list-group-item px-0">
                                                 Duo amet accusam eirmod nonumy stet et et stet eirmod.
@@ -343,7 +352,7 @@ function Detail() {
             </div>
             {/* Shop Detail End */}
             {/* Products Start */}
-            <div className="container-fluid py-5">
+            {/* <div className="container-fluid py-5">
                 <div className="text-center mb-4">
                     <h2 className="section-title px-5">
                         <span className="px-2">You May Also Like</span>
@@ -475,7 +484,7 @@ function Detail() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> */}
             {/* Products End */}
             <Footer />
         </>

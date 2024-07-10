@@ -33,6 +33,7 @@ import {
 import UserHeader from "components/Headers/UserHeader.js";
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Login from "./Login";
 
 const Profile = () => {
   const token = localStorage.getItem('token');
@@ -68,6 +69,13 @@ const Profile = () => {
       console.error('Lỗi khi cập nhật thông tin người dùng:', error);
     }
   };
+
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  // Nếu không có user, điều hướng tới trang login
+  if (!user) {
+    return <Login />;
+  }
 
   return (
     <>

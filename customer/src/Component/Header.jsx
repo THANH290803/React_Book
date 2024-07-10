@@ -16,8 +16,22 @@ function Header() {
         }
     };
 
+    const [totalProducts, setTotalProducts] = useState(0);
+
+    const fetchTotalProducts = async () => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const response = await axios.get(`http://127.0.0.1:8000/api/totalAmount/${user.id}`);
+            setTotalProducts(response.data.total_products);
+        } catch (error) {
+            console.error('Error fetching total products:', error);
+        }
+    };
+    
+
     useEffect(() => {
         fetchCategories();
+        fetchTotalProducts();
     }, []);
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -34,6 +48,7 @@ function Header() {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
         localStorage.removeItem('user');
+        setTotalProducts(0);
         setIsAuthenticated(false);
         navigate('/');
     };
@@ -93,7 +108,7 @@ function Header() {
                         </a>
                         <a type='button' className="btn border" onClick={handleCartClick}>
                             <i className="fas fa-shopping-cart text-primary" />
-                            <span className="badge">0</span>
+                            <span className="badge">{totalProducts}</span>
                         </a>
                         <Modal show={showLoginMessage} onHide={handleClose}>
                             <Modal.Header>
@@ -240,8 +255,8 @@ function Header() {
                         >
                             <div className="carousel-inner">
                                 <div className="carousel-item active" style={{ height: 410 }}>
-                                    <img className="img-fluid" src="img/carousel-1.jpg" alt="Image" />
-                                    <div className="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                                    <img className="img-fluid" src={'https://thxuandinh.thuvien.edu.vn/htmlib/assets/img/Home/slide-2.png'} alt="Image" />
+                                    {/* <div className="carousel-caption d-flex flex-column align-items-center justify-content-center">
                                         <div className="p-3" style={{ maxWidth: 700 }}>
                                             <h4 className="text-light text-uppercase font-weight-medium mb-3">
                                                 10% Off Your First Order
@@ -253,23 +268,23 @@ function Header() {
                                                 Shop Now
                                             </a>
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                                 <div className="carousel-item" style={{ height: 410 }}>
-                                    <img className="img-fluid" src="img/carousel-2.jpg" alt="Image" />
-                                    <div className="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                                    <img className="img-fluid" src={'https://www.fahasa.com/media/wysiwyg/Thang-3-2020/1-Banner-chinh_920x420.jpg'} alt="Image" />
+                                    {/* <div className="carousel-caption d-flex flex-column align-items-center justify-content-center">
                                         <div className="p-3" style={{ maxWidth: 700 }}>
                                             <h4 className="text-light text-uppercase font-weight-medium mb-3">
-                                                10% Off Your First Order
+                                                Giảm 10% cho đơn hàng đầu tiên của bạn
                                             </h4>
                                             <h3 className="display-4 text-white font-weight-semi-bold mb-4">
-                                                Reasonable Price
+                                                Giá cả hợp lý
                                             </h3>
                                             <a href="" className="btn btn-light py-2 px-3">
                                                 Shop Now
                                             </a>
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                             <a

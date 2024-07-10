@@ -9,6 +9,7 @@ import ProductByCategory from "./Web/ProductByCategory";
 import Login from "./Web/Login";
 import Register from "./Web/Register";
 import SucessOrder from "./Web/SucessOrder/SucessOrder";
+import Account from "./Web/Account/Account";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/sucess_order" element={<SucessOrder />} />
+          <Route path="/account" element={<Account />} />
         </Routes>
       </div>
     </Router>

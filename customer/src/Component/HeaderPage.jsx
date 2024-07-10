@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useLocation, Route, Routes, Navigate, useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { Modal, Button } from 'react-bootstrap';
@@ -16,8 +16,21 @@ function HeaderPage() {
         }
     };
 
+    const [totalProducts, setTotalProducts] = useState(0);
+
+    const fetchTotalProducts = async () => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const response = await axios.get(`http://127.0.0.1:8000/api/totalAmount/${user.id}`);
+            setTotalProducts(response.data.total_products);
+        } catch (error) {
+            console.error('Error fetching total products:', error);
+        }
+    };
+
     useEffect(() => {
         fetchCategories();
+        fetchTotalProducts();
     }, []);
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -34,6 +47,7 @@ function HeaderPage() {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
         localStorage.removeItem('user');
+        setTotalProducts(0);
         setIsAuthenticated(false);
         navigate('/');
     };
@@ -94,7 +108,7 @@ function HeaderPage() {
                         </a>
                         <a type='button' className="btn border" onClick={handleCartClick}>
                             <i className="fas fa-shopping-cart text-primary" />
-                            <span className="badge">0</span>
+                            <span className="badge">{totalProducts}</span>
                         </a>
                         <Modal show={showLoginMessage} onHide={handleClose}>
                             <Modal.Header>
@@ -183,9 +197,9 @@ function HeaderPage() {
                                     <Link to={'/'} className="nav-item nav-link">
                                         Trang chủ
                                     </Link>
-                                    <Link to={'/shop'} href="shop.html" className="nav-item nav-link active">
+                                    <NavLink to={'/shop'} href="shop.html" className="nav-item nav-link" activeClassName="active">
                                         Cửa hàng
-                                    </Link>
+                                    </NavLink>
                                     {/* <a href="detail.html" className="nav-item nav-link">
                                         Shop Detail
                                     </a>
@@ -213,9 +227,9 @@ function HeaderPage() {
                                 <div className="navbar-nav ml-auto py-0">
                                     {isAuthenticated ? (
                                         <>
-                                            <Link to={'/account'} className="nav-item nav-link">
+                                            <NavLink to={'/account'} className="nav-item nav-link" activeClassName="active">
                                                 Tài khoản
-                                            </Link>
+                                            </NavLink>
                                             <div className="nav-item nav-link">/</div>
                                             <a type='button' className="nav-item nav-link" onClick={handleLogout}>
                                                 Đăng xuất
@@ -223,13 +237,13 @@ function HeaderPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <Link to={'/login'} className="nav-item nav-link">
+                                            <NavLink to={'/login'} className="nav-item nav-link" activeClassName="active">
                                                 Đăng nhập
-                                            </Link>
+                                            </NavLink>
                                             <div className="nav-item nav-link">/</div>
-                                            <Link to={'/register'} className="nav-item nav-link">
+                                            <NavLink to={'/register'} className="nav-item nav-link" activeClassName="active">
                                                 Đăng ký
-                                            </Link>
+                                            </NavLink>
                                         </>
                                     )}
                                 </div>

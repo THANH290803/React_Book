@@ -45,6 +45,7 @@ import axios from 'axios';
 import DataTable from 'react-data-table-component';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import Login from "./Login";
 
 const Book = () => {
   const [books, setBooks] = useState([]);
@@ -362,6 +363,10 @@ const Book = () => {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
 
+  // Nếu không có user, điều hướng tới trang login
+  if (!user) {
+    return <Login />;
+  }
 
   return (
     <>
@@ -553,7 +558,7 @@ const Book = () => {
         </Row>
       </Container>
 
-      <Modal isOpen={modal} toggle={toggleModal} className="modal-lg">
+      <Modal isOpen={modal} toggle={toggleModal} className="modal-xl">
         <ModalHeader style={{ paddingBottom: "0px" }} toggle={toggleModal}><h2>Thêm sách mới</h2></ModalHeader>
         <ModalBody style={{ paddingTop: "0px" }}>
           <Row>
@@ -638,7 +643,7 @@ const Book = () => {
       </Modal>
 
       {/* // Edit */}
-      <Modal isOpen={showPopup} toggle={() => setShowPopup(false)} className="modal-lg">
+      <Modal isOpen={showPopup} toggle={() => setShowPopup(false)} className="modal-xl">
         <ModalHeader style={{ paddingBottom: "0px" }} toggle={() => setShowPopup(false)}><h2>Sửa sách</h2></ModalHeader>
         <ModalBody style={{ paddingTop: "0px" }}>
           <Row>
@@ -728,7 +733,7 @@ const Book = () => {
         isOpen={isModalOpen}
         toggle={closeModal}
         overlayClassName="modalOverlay"
-        className="modal-lg"
+        className="modal-xl"
       >
         <ModalHeader style={{ paddingBottom: "0px" }} toggle={closeModal}><h2>Chi tiết sách</h2></ModalHeader><br />
         {selectedBook && (

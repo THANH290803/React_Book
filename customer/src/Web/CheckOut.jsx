@@ -41,6 +41,13 @@ function Checkout() {
         setCustomerAddress(user.address);
     }, []);
 
+    const handleClearAllInputs = () => {
+        setCustomerName("");
+        setCustomerPhone("");
+        setCustomerAddress("");
+        setNote("");
+    };
+
     const token = localStorage.getItem('token');
 
     const handleOrder = () => {
@@ -53,6 +60,7 @@ function Checkout() {
             name_customer: customerName,
             phone_customer: customerPhone,
             address_customer: customerAddress,
+            status: 1,
             note: note,
         };
 
@@ -113,7 +121,32 @@ function Checkout() {
             });
     };
 
+    const generateSelectedItemsMarkup = () => {
+        return selectedItems.map((item) => (
+            `<div class="d-flex justify-content-between">
+                <p>${item.book.name}</p>
+                <p>${item.quantity}</p>
+                <p>${(item.book.price * item.quantity).toLocaleString('vi-VN')} VND</p>
+            </div>`
+        )).join('');
+    };
+
     const handleVnpayOrder = () => {
+        // Tạo trạng thái thanh toán mới với dữ liệu mới nhất
+        const newCheckoutState = {
+            customerName,
+            customerPhone,
+            customerAddress,
+            note,
+            selectedItems,
+            selectedPaymentMethod,
+            selectedItemsMarkup: generateSelectedItemsMarkup()
+        };
+    
+        // Lưu trạng thái thanh toán mới vào session storage, ghi đè bất kỳ dữ liệu cũ nào
+        sessionStorage.setItem('checkoutState', JSON.stringify(newCheckoutState));
+    
+        // Tiếp tục với quy trình đặt hàng VNPAY
         axios.post(`http://127.0.0.1:8000/api/paymentMethod/vnpay/${totalPrice}`)
             .then(response => {
                 const { url } = response.data;
@@ -188,80 +221,12 @@ function Checkout() {
                                         onChange={setNote}
                                         modules={Checkout.modules}
                                         formats={Checkout.formats}
-                                        style={{height: '285px'}}
-                                        placeholder="Nhập văn bản của bạn..."
-                                    />
-                                </div>
-                                {/* <div className="col-md-12 form-group">
-                                    <div className="custom-control custom-checkbox">
-                                        <input
-                                            type="checkbox"
-                                            className="custom-control-input"
-                                            id="newaccount"
-                                        />
-                                        <label className="custom-control-label" htmlFor="newaccount">
-                                            Create an account
-                                        </label>
-                                    </div>
-                                </div> */}
-                                {/* <div className="col-md-12 form-group">
-                                    <div className="custom-control custom-checkbox">
-                                        <input
-                                            type="checkbox"
-                                            className="custom-control-input"
-                                            id="shipto"
-                                        />
-                                        <label
-                                            className="custom-control-label"
-                                            htmlFor="shipto"
-                                            data-toggle="collapse"
-                                            data-target="#shipping-address"
-                                        >
-                                            Gửi đến địa chỉ khác
-                                        </label>
-                                    </div>
-                                </div> */}
-                            </div>
-                        </div>
-                        <div className="collapse mb-4" id="shipping-address">
-                            <h4 className="font-weight-semi-bold mb-4">Địa chỉ giao hàng</h4>
-                            <div className="row">
-                                <div className="col-md-6 form-group">
-                                    <label>Tên khách hàng</label>
-                                    <input className="form-control" type="text" placeholder="Tên khách hàng" />
-                                </div>
-                                <div className="col-md-6 form-group">
-                                    <label>Số điện thoại khách hàng</label>
-                                    <input
-                                        className="form-control"
-                                        type="text"
-                                        placeholder="Số điện thoại khách hàng"
+                                        style={{height: '235px'}}
+                                        placeholder="Quý khách hãy nhập yêu cầu (Nếu có)"
                                     />
                                 </div>
                                 <div className="col-md-12 form-group">
-                                    <label>Địa chỉ giao hàng</label>
-                                    <input
-                                        className="form-control"
-                                        type="text"
-                                        placeholder="Địa chỉ giao hàng"
-                                    />
-                                </div>
-                                <div className="col-md-12 form-group">
-                                    <label>Ghi chú</label>
-                                    <textarea
-                                        id="comments"
-                                        name="comments"
-                                        placeholder="Enter your comments here..."
-                                        style={{
-                                            width: '100%',
-                                            height: '150px',
-                                            padding: '10px',
-                                            marginTop: '10px',
-                                            border: '1px solid #ccc',
-                                            borderRadius: '5px',
-                                            resize: 'vertical'
-                                        }}
-                                    />
+                                    <button className='btn btn-primary py-2 px-4' style={{marginTop: '50px'}} onClick={handleClearAllInputs}>Xoá toàn bộ</button>
                                 </div>
                             </div>
                         </div>

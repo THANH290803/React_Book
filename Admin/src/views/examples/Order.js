@@ -142,7 +142,7 @@ const Order = () => {
     // }
   };
 
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [shippingCode, setShippingCode] = useState('');
 
@@ -155,7 +155,7 @@ const Order = () => {
   const handleSaveShippingCode = async () => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
-      const updatedShippingCode = shippingCode === '' ? '0' : shippingCode.trim(); // Ensure empty string becomes '0'
+      const updatedShippingCode = shippingCode === '' ? '' : shippingCode.trim(); // Ensure empty string becomes '0'
       const response = await axios.put(`http://127.0.0.1:8000/api/order/update/${selectedOrder.id}`, {
         shipping_code: updatedShippingCode,
         editor_id: user.id,
@@ -164,6 +164,7 @@ const Order = () => {
       console.log('Shipping code updated successfully:', response.data);
       setIsEditing(false); // Exit edit mode
       // fetchOrders(selectedOrder.status);
+      window.location.reload();
     } catch (error) {
       console.error('Error updating shipping code:', error);
       // Handle error: show error message or retry logic
@@ -172,7 +173,7 @@ const Order = () => {
 
   const handleContentEditableBlur = (event) => {
     const newShippingCode = event.currentTarget.textContent.trim();
-    setShippingCode(newShippingCode === '' ? '0' : newShippingCode); // Set '0' if empty
+    setShippingCode(newShippingCode === '' ? '' : newShippingCode); // Set '0' if empty
   };
 
   return (
@@ -268,7 +269,7 @@ const Order = () => {
                       <th scope="row">
                         <Media className="align-items-center">
                           <Media>
-                            <a href="#" onClick={() => toggleModal(order)}>
+                            <a type="button" onClick={() => toggleModal(order)} style={{ color: 'blue' }}>
                               <span className="mb-0 text-sm">
                                 {order.code_order}
                               </span>
@@ -428,18 +429,24 @@ const Order = () => {
                         onBlur={handleContentEditableBlur}
                         suppressContentEditableWarning
                         style={{ borderBottom: '1px dotted #000', cursor: 'text', minWidth: '50px', display: 'inline-block' }}
-                        dangerouslySetInnerHTML={{ __html: shippingCode === '0' ? 'N/A' : shippingCode }}
+                        dangerouslySetInnerHTML={{ __html: shippingCode === '' ? 'N/A' : shippingCode }}
                       />
                     ) : (
                       <>
                         <span style={{ minWidth: '50px', display: 'inline-block' }}>
-                          {shippingCode === '0' ? 'N/A' : shippingCode}
+                          {shippingCode === '' ? 'N/A' : shippingCode}
                         </span>
-                        <FontAwesomeIcon
-                          icon={faEdit}
-                          style={{ marginLeft: '15px', cursor: 'pointer' }}
-                          onClick={() => setIsEditing(true)}
-                        />
+                        {(() => {
+                          if (selectedOrder.status == 3) {
+                            return (
+                              <FontAwesomeIcon
+                                icon={faEdit}
+                                style={{ marginLeft: '15px', cursor: 'pointer' }}
+                                onClick={() => setIsEditing(true)}
+                              />
+                            )
+                          }
+                        })()}
                       </>
                     )}
                     {isEditing && (
@@ -454,10 +461,12 @@ const Order = () => {
                   <p><strong>Người duyệt đơn:</strong> {selectedOrder.approver_name ? selectedOrder.approver_name : 'N/A'}</p>
                   <p><strong>Người sửa đơn hàng:</strong> {selectedOrder.editor_name ? selectedOrder.editor_name : 'N/A'}</p>
                 </div>
-                <div className="col-md-12">
-                  <strong>Ghi chú</strong>
-                  <div dangerouslySetInnerHTML={{ __html: selectedOrder.note }} />
-                </div>
+                {selectedOrder.note && (
+                  <div className="col-md-12">
+                    <strong>Ghi chú</strong>
+                    <div dangerouslySetInnerHTML={{ __html: selectedOrder.note }} />
+                  </div>
+                )}
               </div>
 
               <h3 style={{ fontSize: '22px' }}>Thông tin sản phẩm</h3>
@@ -468,7 +477,7 @@ const Order = () => {
                     <th>Sản phẩm</th>
                     <th className="text-center">Số lượng</th>
                     <th>Giá tiền</th>
-                    <th>Tổng tiền</th>
+                    <th>Thành tiền</th>
                   </tr>
                 </thead>
                 {selectedOrder?.books && (

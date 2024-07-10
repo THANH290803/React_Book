@@ -41,6 +41,7 @@ import {
   import Header from "components/Headers/Header.js";
   import React, { useState, useEffect } from 'react';
   import axios from 'axios';
+  import Login from "./Login";
   
   const Payment = () => {
     const [paymentMethods, setPaymentMethods] = useState([]);
@@ -168,6 +169,11 @@ import {
 
       const token = localStorage.getItem('token');
       const user = JSON.parse(localStorage.getItem('user'));
+
+      // Nếu không có user, điều hướng tới trang login
+      if (!user) {
+        return <Login />;
+      }
 
     return (
       <>

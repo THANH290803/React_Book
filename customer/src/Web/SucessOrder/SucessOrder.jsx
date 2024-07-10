@@ -5,6 +5,8 @@ import axios from 'axios';
 
 function SucessOrder() {
     const [animationStep, setAnimationStep] = useState(0);
+    const [checkoutState, setCheckoutState] = useState(null);
+    const [vnpTransactionNo, setVnpTransactionNo] = useState(null);
 
     useEffect(() => {
         const timer1 = setTimeout(() => {
@@ -22,11 +24,91 @@ function SucessOrder() {
 
             return () => clearTimeout(timer2);
         }, 1500);
+        
+
+        const checkoutStateFromStorage = sessionStorage.getItem('checkoutState');
+        if (checkoutStateFromStorage) {
+            setCheckoutState(JSON.parse(checkoutStateFromStorage));
+        }
+
+        // const checkoutStateFromStorage = sessionStorage.getItem('checkoutState');
+        // if (checkoutStateFromStorage) {
+        //     setCheckoutState(JSON.parse(checkoutStateFromStorage));
+        //     const parsedCheckoutState = JSON.parse(checkoutStateFromStorage);
+        //     setVnpTransactionNo(parsedCheckoutState.vnpTransactionNo); // Lấy vnpTransactionNo từ checkoutState
+        //     console.log(parsedCheckoutState.vnpTransactionNo);
+        // }
 
         return () => clearTimeout(timer1);
     }, []);
+
     const selectedItems = JSON.parse(localStorage.getItem('selectedItems')) || [];
-    console.log(selectedItems);
+
+    
+    useEffect(() => {
+        // Function to create order and order details
+        const createOrderAndDetails = async () => {
+            if (checkoutState) {
+                try {
+                    const user = JSON.parse(localStorage.getItem('user'));
+                    // Create the order
+                    const orderData = {
+                        customer_id: user.id, // Assuming you have customer_id in checkoutState
+                        payment_method_id: checkoutState.selectedPaymentMethod,
+                        name_customer: checkoutState.customerName,
+                        phone_customer: checkoutState.customerPhone,
+                        address_customer: checkoutState.customerAddress,
+                        status: 2,
+                        note: checkoutState.note,
+                    };
+
+                    const orderResponse = await axios.post('http://127.0.0.1:8000/api/order/add', orderData, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+
+                    const createdOrderId = orderResponse.data.id;
+
+                    // Create order details
+                    const orderDetails = checkoutState.selectedItems.map(item => ({
+                        book_id: item.book.id,
+                        order_id: createdOrderId,
+                        quantity: item.quantity,
+                        unit_price: item.book.price * item.quantity,
+                    }));
+
+                    const orderDetailsResponse = await axios.post('http://127.0.0.1:8000/api/order_detail/add', orderDetails, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+
+                    // Xóa các cartItem sau khi đặt hàng thành công
+                    checkoutState.selectedItems.forEach(async (item) => {
+                        await axios.delete(`http://127.0.0.1:8000/api/deleteCart/${item.id}`, {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                    });
+
+                    // Clear checkout state from sessionStorage after successful order creation
+                    sessionStorage.removeItem('checkoutState');
+                } catch (error) {
+                    console.error('Error creating order:', error);
+                }
+            }
+        };
+
+        // Gọi hàm createOrderAndDetails khi checkoutState và vnpTransactionNo thay đổi
+        if (checkoutState) {
+            createOrderAndDetails();
+        }
+    }, [checkoutState]);
+
     return (
         <div>
             <Helmet>
