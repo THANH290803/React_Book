@@ -52,6 +52,10 @@ const Publisher = () => { // http://127.0.0.1:8000/api/publisher
   });
   const [search, setSearch] = useState('');
   const [filtered, setFiltered] = useState([]);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const [notificationModal, setNotificationModal] = useState(false);
+
+  const toggleNotificationModal = () => setNotificationModal(!notificationModal);
 
   useEffect(() => {
     localStorage.setItem('itemsPerPage', itemsPerPage.toString());
@@ -90,6 +94,16 @@ const Publisher = () => { // http://127.0.0.1:8000/api/publisher
     setCurrentPage(1); // Reset to first page when searching
   };
 
+  // Handle notifications
+  const showNotificationWithTimeout = (message, type) => {
+    setNotification({ message, type });
+    setNotificationModal(true);
+    setTimeout(() => {
+      setNotificationModal(false);
+      setNotification({ message: '', type: '' });
+    }, 3500); // 3 giây
+  };
+
   // ADD
 
   const [modal, setModal] = useState(false);
@@ -122,6 +136,7 @@ const Publisher = () => { // http://127.0.0.1:8000/api/publisher
       setErrorMessage('');
       fetchData();
       toggleModal(); // Close the modal after successful addition
+      showNotificationWithTimeout('Thêm nhà xuất bản thành công!', 'success');
     } catch (error) {
       if (error.response && error.response.status === 422) {
         // Handle validation errors
@@ -177,6 +192,7 @@ const Publisher = () => { // http://127.0.0.1:8000/api/publisher
       });
       setErrorMessage('');
       fetchData();
+      showNotificationWithTimeout('Sửa nhà xuất bản thành công!', 'success');
     } catch (error) {
       if (error.response && error.response.status === 422) {
         // Handle validation errors
@@ -200,6 +216,7 @@ const Publisher = () => { // http://127.0.0.1:8000/api/publisher
       await axios.delete(`http://127.0.0.1:8000/api/publisher/delete/${publisherId}`);
       // After successful deletion, refresh the publisher list or perform other actions
       fetchData();
+      showNotificationWithTimeout('Xoá nhà xuất bản thành công!', 'success');
     } catch (error) {
       console.error('Error deleting publisher:', error);
     }
@@ -309,65 +326,134 @@ const Publisher = () => { // http://127.0.0.1:8000/api/publisher
                 </tbody>
               </Table>
               <CardFooter className="py-4">
-                <nav aria-label="...">
-                  <Pagination
-                    className="pagination justify-content-end mb-0"
-                    listClassName="justify-content-end mb-0"
-                  >
-                    <PaginationItem
-                      className={`${currentPage === 1 ? 'disabled' : ''
-                        }`}
+                {!search && (
+                  <nav aria-label="...">
+                    <Pagination
+                      className="pagination justify-content-end mb-0"
+                      listClassName="justify-content-end mb-0"
                     >
-                      <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(currentPage - 1);
-                        }}
-                        tabIndex="-1"
-                      >
-                        <i className="fas fa-angle-left" />
-                        <span className="sr-only">Previous</span>
-                      </PaginationLink>
-                    </PaginationItem>
-                    {Array.from({ length: Math.ceil(publishers.length / itemsPerPage) }).map((_, index) => (
                       <PaginationItem
-                        key={index}
-                        className={`${currentPage === index + 1 ? 'active' : ''}`}
+                        className={`${currentPage === 1 ? 'disabled' : ''
+                          }`}
                       >
                         <PaginationLink
                           href="#pablo"
                           onClick={(e) => {
                             e.preventDefault();
-                            setCurrentPage(index + 1);
+                            setCurrentPage(currentPage - 1);
                           }}
+                          tabIndex="-1"
                         >
-                          {index + 1}
+                          <i className="fas fa-angle-left" />
+                          <span className="sr-only">Previous</span>
                         </PaginationLink>
                       </PaginationItem>
-                    ))}
-                    <PaginationItem
-                      className={`${currentPage === Math.ceil(publishers.length / itemsPerPage) ? 'disabled' : ''
-                        }`}
-                    >
-                      <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(currentPage + 1);
-                        }}
+                      {Array.from({ length: Math.ceil(publishers.length / itemsPerPage) }).map((_, index) => (
+                        <PaginationItem
+                          key={index}
+                          className={`${currentPage === index + 1 ? 'active' : ''}`}
+                        >
+                          <PaginationLink
+                            href="#pablo"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(index + 1);
+                            }}
+                          >
+                            {index + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem
+                        className={`${currentPage === Math.ceil(publishers.length / itemsPerPage) ? 'disabled' : ''
+                          }`}
                       >
-                        <i className="fas fa-angle-right" />
-                        <span className="sr-only">Next</span>
-                      </PaginationLink>
-                    </PaginationItem>
-                  </Pagination>
-                </nav>
+                        <PaginationLink
+                          href="#pablo"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(currentPage + 1);
+                          }}
+                        >
+                          <i className="fas fa-angle-right" />
+                          <span className="sr-only">Next</span>
+                        </PaginationLink>
+                      </PaginationItem>
+                    </Pagination>
+                  </nav>
+                )}
               </CardFooter>
             </Card>
           </div>
         </Row>
       </Container>
+
+      {/* Notification Modal */}
+      <Modal
+        className="modal-dialog-centered"
+        size="lg"
+        isOpen={notificationModal}
+        toggle={toggleNotificationModal}
+        style={{
+          maxWidth: '500px',
+          borderRadius: '12px',
+          // overflow: 'hidden',
+          // border: '1px solid #ddd',
+          // boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+        }}
+      >
+        <ModalHeader
+          toggle={toggleNotificationModal}
+          style={{
+            backgroundColor: notification.type === 'success' ? '#4CAF50' : '#F44336',
+            color: '#fff',
+            borderBottom: 'none',
+            padding: '15px',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}
+        >
+          <h3>{notification.type === 'success' ? 'Thành công!' : ''}</h3>
+        </ModalHeader>
+        <ModalBody
+          style={{
+            padding: '20px',
+            backgroundColor: '#fff',
+            fontSize: '16px',
+            color: '#333',
+            textAlign: 'center',
+            lineHeight: '1.5'
+          }}
+        >
+          {notification.message}
+        </ModalBody>
+        <ModalFooter
+          style={{
+            borderTop: 'none',
+            padding: '10px',
+            display: 'flex',
+            justifyContent: 'center'
+          }}
+        >
+          <Button
+            color="secondary"
+            onClick={toggleNotificationModal}
+            style={{
+              backgroundColor: '#007bff',
+              borderColor: '#007bff',
+              color: '#fff',
+              padding: '10px 20px',
+              borderRadius: '5px',
+              fontSize: '16px',
+              fontWeight: '600',
+              transition: 'background-color 0.3s',
+            }}
+          >
+            Đóng
+          </Button>
+        </ModalFooter>
+      </Modal>
 
       {/* Modal để thêm nhà xuất bản mới */}
       <Modal isOpen={modal} toggle={toggleModal}>
@@ -398,7 +484,16 @@ const Publisher = () => { // http://127.0.0.1:8000/api/publisher
           </FormGroup>
         </ModalBody>
         <ModalFooter style={{ paddingTop: "0px" }}>
-          <Button color="primary" onClick={addPublisher}>Thêm</Button>{' '}
+          <Button color="primary" onClick={addPublisher}
+            disabled={
+              !(
+                name.trim() !== '' &&
+                phone_number.trim() !== '' &&
+                email.trim() !== '' &&
+                address.trim() !== ''
+              )
+            }
+          >Thêm</Button>{' '}
           <Button color="secondary" onClick={toggleModal}>Hủy</Button>
         </ModalFooter>
       </Modal>

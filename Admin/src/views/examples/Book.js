@@ -84,14 +84,16 @@ const Book = () => {
   // Handle search input change
   const handleSearch = (e) => {
     setSearch(e.target.value);
+    const searchTerm = e.target.value.toLowerCase();
     const filteredData = books.filter((book) =>
-      book.name.toLowerCase().includes(e.target.value.toLowerCase()) ||
-      book.isbn.toLowerCase().includes(e.target.value.toLowerCase()) ||
-      book.price.toLowerCase().includes(e.target.value.toLowerCase())
+      book.name.toLowerCase().includes(searchTerm) ||
+      book.isbn.toLowerCase().includes(searchTerm) ||
+      String(book.price).toLowerCase().includes(searchTerm)
     );
     setFilteredBooks(filteredData);
     setCurrentPage(1); // Reset to first page when searching
   };
+
 
   // List Pubsiher
   const [publishers, setPublishers] = useState([]);
@@ -498,6 +500,7 @@ const Book = () => {
                 </tbody>
               </Table>
               <CardFooter className="py-4">
+              {!search && (
                 <nav aria-label="...">
                   <Pagination
                     className="pagination justify-content-end mb-0"
@@ -552,6 +555,7 @@ const Book = () => {
                     </PaginationItem>
                   </Pagination>
                 </nav>
+                )}
               </CardFooter>
             </Card>
           </div>

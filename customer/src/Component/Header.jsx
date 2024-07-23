@@ -27,7 +27,7 @@ function Header() {
             console.error('Error fetching total products:', error);
         }
     };
-    
+
 
     useEffect(() => {
         fetchCategories();
@@ -50,6 +50,8 @@ function Header() {
         localStorage.removeItem('user');
         setTotalProducts(0);
         setIsAuthenticated(false);
+        localStorage.setItem('logoutMessage', 'Đăng xuất thành công. Hẹn gặp lại bạn!');
+        window.dispatchEvent(new Event('userLoggedOut'));
         navigate('/');
     };
 

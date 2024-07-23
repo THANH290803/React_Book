@@ -49,6 +49,7 @@ function HeaderPage() {
         localStorage.removeItem('user');
         setTotalProducts(0);
         setIsAuthenticated(false);
+        localStorage.setItem('logoutMessage', 'Đăng xuất thành công. Hẹn gặp lại bạn!');
         navigate('/');
     };
 

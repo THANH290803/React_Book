@@ -4,9 +4,38 @@ import axios from 'axios';
 import Header from "../Component/Header"
 import Footer from "../Component/Footer";
 import HeaderPage from "../Component/HeaderPage";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 function Index() {
+    useEffect(() => {
+        const message = localStorage.getItem('loginMessage');
+        if (message) {
+            toast.success(message); // Show success message
+            setTimeout(() => {
+                localStorage.removeItem('loginMessage'); // Remove message after 3 seconds
+            }, 3000);
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleUserLoggedOut = () => {
+            const message = localStorage.getItem('logoutMessage');
+            if (message) {
+                toast.success(message); // Hiển thị thông báo đăng xuất
+                localStorage.removeItem('logoutMessage'); // Xóa thông báo sau khi hiển thị
+            }
+        };
+
+        // Lắng nghe sự kiện đăng xuất
+        window.addEventListener('userLoggedOut', handleUserLoggedOut);
+
+        // Cleanup listener on component unmount
+        return () => window.removeEventListener('userLoggedOut', handleUserLoggedOut);
+    }, []);
+
+
     const [newProducts, setNewProducts] = useState([]);
     const [hotProducts, setHotProducts] = useState([]);
 
@@ -67,11 +96,16 @@ function Index() {
                 ]
             });
             console.log(response.data);
-            setCartItems([...cartItems, product]);
-            alert('Added to cart successfully!');
+
+            if (response.data.success) {
+                setCartItems([...cartItems, product]);
+                toast.success(`"${product.name}" đã được thêm vào giỏ hàng thành công!`);
+            } else if (response.data.out_of_stock_items.length > 0) {
+                toast.error(`"${product.name}" đã hết hàng`);
+            }
         } catch (error) {
             console.error('Error adding to cart:', error);
-            alert('Failed to add to cart. Please try again.');
+            toast.error(`"${product.name}" đã được thêm vào giỏ hàng thất bại!`);
         }
     };
 
@@ -335,6 +369,16 @@ function Index() {
                         }
                     })}
                 </div>
+                <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    closeOnClick
+                    pauseOnHover
+                    draggable
+                    theme="colored"
+                    style={{ width: 'auto' }}
+                />
             </div>
             {/* Products End */}
             {/* Vendor Start */}

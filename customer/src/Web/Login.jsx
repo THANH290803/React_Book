@@ -3,13 +3,15 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import HeaderPage from "../Component/HeaderPage";
 import Footer from "../Component/Footer";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
-    
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -29,9 +31,11 @@ function Login() {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('role', response.data.user.role)
             localStorage.setItem('user', JSON.stringify(response.data.user));
+            localStorage.setItem('loginMessage', 'Đăng nhập thành công!');
             navigate('/');
         } catch (error) {
             console.error('Login failed:', error);
+            toast.error('Đăng nhập không thành công. Vui lòng thử lại.');
             // Xử lý lỗi đăng nhập, ví dụ: hiển thị thông báo lỗi cho người dùng
         }
     };
@@ -105,6 +109,16 @@ function Login() {
                                 </button>
                             </div>
                         </form>
+                        <ToastContainer
+                            position="top-right"
+                            autoClose={3000}
+                            hideProgressBar={false}
+                            closeOnClick
+                            pauseOnHover
+                            draggable
+                            theme="colored"
+                            style={{ width: 'auto' }}
+                        />
                     </div>
                 </div>
             </div>

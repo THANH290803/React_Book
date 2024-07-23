@@ -166,60 +166,62 @@ const Customer = () => {
                 </tbody>
               </Table>
               <CardFooter className="py-4">
-                <nav aria-label="...">
-                  <Pagination
-                    className="pagination justify-content-end mb-0"
-                    listClassName="justify-content-end mb-0"
-                  >
-                    <PaginationItem
-                      className={`${currentPage === 1 ? 'disabled' : ''
-                        }`}
+                {!search && (
+                  <nav aria-label="...">
+                    <Pagination
+                      className="pagination justify-content-end mb-0"
+                      listClassName="justify-content-end mb-0"
                     >
-                      <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(currentPage - 1);
-                        }}
-                        tabIndex="-1"
-                      >
-                        <i className="fas fa-angle-left" />
-                        <span className="sr-only">Previous</span>
-                      </PaginationLink>
-                    </PaginationItem>
-                    {Array.from({ length: Math.ceil(customers.length / itemsPerPage) }).map((_, index) => (
                       <PaginationItem
-                        key={index}
-                        className={`${currentPage === index + 1 ? 'active' : ''}`}
+                        className={`${currentPage === 1 ? 'disabled' : ''
+                          }`}
                       >
                         <PaginationLink
                           href="#pablo"
                           onClick={(e) => {
                             e.preventDefault();
-                            setCurrentPage(index + 1);
+                            setCurrentPage(currentPage - 1);
                           }}
+                          tabIndex="-1"
                         >
-                          {index + 1}
+                          <i className="fas fa-angle-left" />
+                          <span className="sr-only">Previous</span>
                         </PaginationLink>
                       </PaginationItem>
-                    ))}
-                    <PaginationItem
-                      className={`${currentPage === Math.ceil(customers.length / itemsPerPage) ? 'disabled' : ''
-                        }`}
-                    >
-                      <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(currentPage + 1);
-                        }}
+                      {Array.from({ length: Math.ceil(customers.length / itemsPerPage) }).map((_, index) => (
+                        <PaginationItem
+                          key={index}
+                          className={`${currentPage === index + 1 ? 'active' : ''}`}
+                        >
+                          <PaginationLink
+                            href="#pablo"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(index + 1);
+                            }}
+                          >
+                            {index + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem
+                        className={`${currentPage === Math.ceil(customers.length / itemsPerPage) ? 'disabled' : ''
+                          }`}
                       >
-                        <i className="fas fa-angle-right" />
-                        <span className="sr-only">Next</span>
-                      </PaginationLink>
-                    </PaginationItem>
-                  </Pagination>
-                </nav>
+                        <PaginationLink
+                          href="#pablo"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(currentPage + 1);
+                          }}
+                        >
+                          <i className="fas fa-angle-right" />
+                          <span className="sr-only">Next</span>
+                        </PaginationLink>
+                      </PaginationItem>
+                    </Pagination>
+                  </nav>
+                )}
               </CardFooter>
             </Card>
           </div>

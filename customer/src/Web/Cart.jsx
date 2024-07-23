@@ -3,6 +3,8 @@ import HeaderPage from "../Component/HeaderPage";
 import Footer from "../Component/Footer";
 import axios from 'axios';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Cart() {
     const [cart, setCart] = useState(null);
@@ -17,7 +19,7 @@ function Cart() {
             if (initialCart && initialCart.items) {
                 const updatedItems = initialCart.items.map(item => ({
                     ...item,
-                    selected: selectAll
+                    selected: selectAll && item.book.amount > 0
                 }));
                 const updatedCart = {
                     ...initialCart,
@@ -131,7 +133,7 @@ function Cart() {
                 ...cart,
                 items: cart.items.map(item => ({
                     ...item,
-                    selected: newSelectAll
+                    selected: newSelectAll && item.book.amount > 0
                 }))
             };
             setCart(updatedCart);
@@ -144,7 +146,7 @@ function Cart() {
                 if (item.id === itemId) {
                     return {
                         ...item,
-                        selected: !item.selected
+                        selected: item.book.amount > 0 ? !item.selected : false
                     };
                 }
                 return item;
@@ -158,9 +160,38 @@ function Cart() {
     };
 
     const navigate = useNavigate();
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         const selectedItems = cart.items.filter(item => item.selected);
-        navigate('/checkout', { state: { selectedItems } });
+
+        // Prepare data for availability check
+        const itemsToCheck = selectedItems.map(item => ({
+            id: item.book.id,
+            quantity: item.quantity
+        }));
+
+        try {
+            const response = await axios.post('http://127.0.0.1:8000/api/checkAvailability', { items: itemsToCheck });
+
+            if (response.data.success) {
+                // Proceed to checkout
+                navigate('/checkout', { state: { selectedItems } });
+            } else {
+                toast.error(response.data.message); // Show message if any product is out of stock
+            }
+        } catch (error) {
+            console.error('Error checking availability:', error);
+
+            // Check if the error response exists
+            if (error.response && error.response.data && error.response.data.message) {
+                toast.error(error.response.data.message); // Show specific error message from server
+                // Reload the page after 3 seconds
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3500); // 3000 milliseconds = 3 seconds
+            } else {
+                toast.error('An error occurred while checking product availability. Please try again.'); // Fallback message
+            }
+        }
     };
 
     return (
@@ -205,7 +236,11 @@ function Cart() {
                                 {cart.items.map((item) => (
                                     <tbody className="align-middle" key={item.id}>
                                         <tr>
-                                            <td className="align-middle"><input type='checkbox' checked={item.selected} onChange={() => handleSelectItem(item.id)}/></td>
+                                            <td className="align-middle">
+                                                {item.book.amount === 0 ? null : (
+                                                    <input type='checkbox' checked={item.book.amount > 0 && item.selected} onChange={() => handleSelectItem(item.id)} />
+                                                )}
+                                            </td>
                                             <td className="align-middle">
                                                 <img src={item.book.img} alt="" style={{ width: 150, height: 230 }} />{" "}
                                             </td>
@@ -215,26 +250,30 @@ function Cart() {
                                             </td>
                                             <td className="align-middle">{item.book.price.toLocaleString('vi-VN')} VND</td>
                                             <td className="align-middle">
-                                                <div
-                                                    className="input-group quantity mx-auto"
-                                                    style={{ width: 100 }}
-                                                >
-                                                    <div className="input-group-btn">
-                                                        <button className="btn btn-sm btn-primary btn-minus" onClick={() => handleDecreaseQuantity(item.id, item.quantity)}>
-                                                            <i className="fa fa-minus" />
-                                                        </button>
+                                                {item.book.amount === 0 ? (
+                                                    <span style={{ color: 'red', fontWeight: 'bold' }}>Hết hàng</span>
+                                                ) : (
+                                                    <div
+                                                        className="input-group quantity mx-auto"
+                                                        style={{ width: 100 }}
+                                                    >
+                                                        <div className="input-group-btn">
+                                                            <button className="btn btn-sm btn-primary btn-minus" onClick={() => handleDecreaseQuantity(item.id, item.quantity)}>
+                                                                <i className="fa fa-minus" />
+                                                            </button>
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control form-control-sm bg-secondary text-center"
+                                                            value={item.quantity}
+                                                        />
+                                                        <div className="input-group-btn">
+                                                            <button className="btn btn-sm btn-primary btn-plus" onClick={() => handleIncreaseQuantity(item.id, item.quantity)} disabled={item.quantity >= item.book.amount}>
+                                                                <i className="fa fa-plus" />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-sm bg-secondary text-center"
-                                                        value={item.quantity}
-                                                    />
-                                                    <div className="input-group-btn">
-                                                        <button className="btn btn-sm btn-primary btn-plus" onClick={() => handleIncreaseQuantity(item.id, item.quantity)} disabled={item.quantity >= item.book.amount}>
-                                                            <i className="fa fa-plus" />
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                                )}
                                             </td>
                                             <td className="align-middle">{(item.book.price * item.quantity).toLocaleString('vi-VN')} VND</td>
                                             <td className="align-middle">
@@ -248,7 +287,7 @@ function Cart() {
                             </table>
                         )}
                     </div>
-                    <div className="col-lg-4" style={{marginLeft: '1088px'}}>
+                    <div className="col-lg-4" style={{ marginLeft: '1088px' }}>
                         {/* <form className="mb-5" action="">
                             <div className="input-group">
                                 <input
@@ -270,7 +309,7 @@ function Cart() {
                                     <h6 className="font-weight-medium">Tổng phụ</h6>
                                     <h6 className="font-weight-medium">{subtotal.toLocaleString('vi-VN')} VND</h6>
                                 </div> */}
-                                {/* <div className="d-flex justify-content-between">
+                            {/* <div className="d-flex justify-content-between">
                                     <h6 className="font-weight-medium">Phí vận chuyển</h6>
                                     <h6 className="font-weight-medium">{shippingFee.toLocaleString('vi-VN')} VND</h6>
                                 </div> */}
@@ -281,8 +320,8 @@ function Cart() {
                                     <h5 className="font-weight-bold">{totalSum.toLocaleString('vi-VN')} VND</h5>
                                 </div>
                                 {cart && cart.items && (
-                                    <button 
-                                        onClick={handleCheckout} 
+                                    <button
+                                        onClick={handleCheckout}
                                         className="btn btn-block btn-primary my-3 py-3">
                                         Tiến hành thanh toán
                                     </button>
@@ -292,6 +331,17 @@ function Cart() {
                     </div>
                 </div>
             </div>
+
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                closeOnClick
+                pauseOnHover
+                draggable
+                theme="colored"
+                style={{ width: 'auto' }} // Automatically adjusts to content width
+            />
             {/* Cart End */}
             <Footer />
         </>

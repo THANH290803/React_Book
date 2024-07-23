@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import HeaderPage from "../Component/HeaderPage";
 import Footer from "../Component/Footer";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import $ from 'jquery';
 // import '../App.css';
 // import '../Assets/lib/owlcarousel/assets/owl.carousel.min.css';
@@ -28,7 +30,9 @@ function Detail() {
     const [quantity, setQuantity] = useState(1);
 
     const handleIncrease = () => {
-        setQuantity(quantity + 1);
+        if (product && quantity < product.amount) { // Use product.amount for max quantity
+            setQuantity(quantity + 1);
+        }
     };
 
     const handleDecrease = () => {
@@ -67,11 +71,17 @@ function Detail() {
                 ]
             });
             console.log(response.data);
-            setCartItems([...cartItems, product, quantity]);
-            alert('Added to cart successfully!');
+            // setCartItems([...cartItems, product, quantity]);
+            // toast.success(`"${product.name}" đã được thêm vào giỏ hàng thành công!`);
+            if (response.data.success) {
+                setCartItems([...cartItems, product, quantity]);
+                toast.success(`"${product.name}" đã được thêm vào giỏ hàng thành công!`);
+            } else if (response.data.out_of_stock_items.length > 0) {
+                toast.error(`"${product.name}" đã hết hàng`);
+            }
         } catch (error) {
             console.error('Error adding to cart:', error);
-            alert('Failed to add to cart. Please try again.');
+            toast.error(`"${product.name}" đã được thêm vào giỏ hàng thất bại!`);
         }
     };
 
@@ -159,7 +169,7 @@ function Detail() {
                                     readOnly
                                 />
                                 <div className="input-group-btn">
-                                    <button className="btn btn-primary btn-plus" onClick={handleIncrease}>
+                                    <button className="btn btn-primary btn-plus" onClick={handleIncrease} disabled={product && quantity >= product.amount}>
                                         <i className="fa fa-plus" />
                                     </button>
                                 </div>
@@ -167,6 +177,16 @@ function Detail() {
                             <button className="btn btn-primary px-3" onClick={() => addToCart(product)}>
                                 <i className="fa fa-shopping-cart mr-1" /> Thêm vào giỏ hàng
                             </button>
+                            <ToastContainer
+                                position="top-right"
+                                autoClose={3000}
+                                hideProgressBar={false}
+                                closeOnClick
+                                pauseOnHover
+                                draggable
+                                theme="colored"
+                                style={{ width: 'auto' }}
+                            />
                         </div>
                         <div className="d-flex pt-2">
                             <p className="text-dark font-weight-medium mb-0 mr-2">Share on:</p>
@@ -226,7 +246,7 @@ function Detail() {
                                 <div className="row">
                                     <div className="col-md-6">
                                         <ul className="list-group list-group-flush">
-                                        <li className="list-group-item px-0">
+                                            <li className="list-group-item px-0">
                                                 <strong style={{ paddingRight: '201px' }}>ISBN</strong>
                                                 <span>{product.isbn}</span>
                                             </li>

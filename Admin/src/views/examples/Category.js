@@ -35,7 +35,7 @@ import {
   Row,
   UncontrolledTooltip,
   Button,
-  Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input, CardBody, 
+  Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input, CardBody,
 } from "reactstrap";
 // core components
 import Header from "components/Headers/Header.js";
@@ -55,6 +55,10 @@ const Category = () => {
   const [editModal, setEditModal] = useState(false);
   const [editedCategory, setEditedCategory] = useState(null);
   const [search, setSearch] = useState('');
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const [notificationModal, setNotificationModal] = useState(false);
+
+  const toggleNotificationModal = () => setNotificationModal(!notificationModal);
 
   const fetchData = async () => {
     try {
@@ -68,6 +72,16 @@ const Category = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Handle notifications
+  const showNotificationWithTimeout = (message, type) => {
+    setNotification({ message, type });
+    setNotificationModal(true);
+    setTimeout(() => {
+      setNotificationModal(false);
+      setNotification({ message: '', type: '' });
+    }, 3500); // 3 giây
+  };
 
   const toggleModal = () => {
     setName('');
@@ -86,6 +100,7 @@ const Category = () => {
       setErrorMessage('');
       fetchData();
       toggleModal();
+      showNotificationWithTimeout('Thêm danh mục thành công!', 'success');
     } catch (error) {
       if (error.response) {
         if (error.response.status === 409) {
@@ -106,6 +121,7 @@ const Category = () => {
       await axios.put(`http://127.0.0.1:8000/api/category/update/${editedCategory.id}`, { name: editedCategory.name });
       fetchData();
       toggleEditModal();
+      showNotificationWithTimeout('Sửa danh mục thành công!', 'success');
     } catch (error) {
       if (error.response && error.response.status === 409) {
         setErrorMessage(error.response.data.message);
@@ -119,6 +135,7 @@ const Category = () => {
     try {
       await axios.delete(`http://127.0.0.1:8000/api/category/delete/${id}`);
       fetchData();
+      showNotificationWithTimeout('Xoá danh mục thành công!', 'success');
     } catch (error) {
       console.error('Error deleting category:', error);
     }
@@ -142,21 +159,21 @@ const Category = () => {
       name: '',
       cell: row => (
         <>
-        {user.role !== 2 && (
-          <UncontrolledDropdown>
-          <DropdownToggle color="secondary" size="sm">
-            <FontAwesomeIcon icon={faEllipsisV} />
-          </DropdownToggle>
-          <DropdownMenu right>
-            <DropdownItem onClick={() => { setEditedCategory(row); toggleEditModal(); }} style={{color: 'orange'}}>
-              <FontAwesomeIcon icon={faEdit} className="mr-2" /> Sửa danh mục
-            </DropdownItem>
-            <DropdownItem onClick={() => deleteCategory(row.id)} style={{color: 'red'}}>
-              <FontAwesomeIcon icon={faTrashAlt} className="mr-2" /> Xóa danh mục
-            </DropdownItem>
-          </DropdownMenu>
-        </UncontrolledDropdown>
-        )}
+          {user.role !== 2 && (
+            <UncontrolledDropdown>
+              <DropdownToggle color="secondary" size="sm">
+                <FontAwesomeIcon icon={faEllipsisV} />
+              </DropdownToggle>
+              <DropdownMenu right>
+                <DropdownItem onClick={() => { setEditedCategory(row); toggleEditModal(); }} style={{ color: 'orange' }}>
+                  <FontAwesomeIcon icon={faEdit} className="mr-2" /> Sửa danh mục
+                </DropdownItem>
+                <DropdownItem onClick={() => deleteCategory(row.id)} style={{ color: 'red' }}>
+                  <FontAwesomeIcon icon={faTrashAlt} className="mr-2" /> Xóa danh mục
+                </DropdownItem>
+              </DropdownMenu>
+            </UncontrolledDropdown>
+          )}
         </>
       ),
       ignoreRowClick: true,
@@ -164,7 +181,7 @@ const Category = () => {
       button: true,
     },
   ];
-  
+
 
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(search.toLowerCase())
@@ -199,34 +216,34 @@ const Category = () => {
         <Row>
           <div className="col">
             <Card className="shadow">
-                <CardHeader className="border-0" style={{ display: "flex", alignItems: "center" }}>
-                    <div style={{ flex: "1" }}>
-                      <h3 className="mb-0" style={{ paddingBottom: "10px" }}>Quản lý danh mục</h3>
-                    </div>
-                    {user.role !== 2 && (
-                    <div>
-                      <a className="btn btn-success" onClick={toggleModal}>Thêm danh mục</a>
-                    </div>
-                    )}
-                </CardHeader>
-                <CardBody>
-                  <Input
-                    type="text"
-                    placeholder="Tìm kiếm danh mục"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="mb-3"
-                    style={{width: '500px', float: 'right'}}
-                  />
-                  <DataTable
-                    columns={columns}
-                    data={filteredCategories}
-                    pagination
-                    noHeader
-                    responsive
-                    customStyles={customStyles} // Nếu có customStyles khác
-                  />
-                </CardBody>
+              <CardHeader className="border-0" style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ flex: "1" }}>
+                  <h3 className="mb-0" style={{ paddingBottom: "10px" }}>Quản lý danh mục</h3>
+                </div>
+                {user.role !== 2 && (
+                  <div>
+                    <a className="btn btn-success" onClick={toggleModal}>Thêm danh mục</a>
+                  </div>
+                )}
+              </CardHeader>
+              <CardBody>
+                <Input
+                  type="text"
+                  placeholder="Tìm kiếm danh mục"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="mb-3"
+                  style={{ width: '500px', float: 'right' }}
+                />
+                <DataTable
+                  columns={columns}
+                  data={filteredCategories}
+                  pagination
+                  noHeader
+                  responsive
+                  customStyles={customStyles} // Nếu có customStyles khác
+                />
+              </CardBody>
               {/* <CardFooter className="py-4">
                   <nav aria-label="...">
                     <Pagination
@@ -290,6 +307,73 @@ const Category = () => {
         </Row>
       </Container>
 
+      {/* Notification Modal */}
+      <Modal
+        className="modal-dialog-centered"
+        size="lg"
+        isOpen={notificationModal}
+        toggle={toggleNotificationModal}
+        style={{
+          maxWidth: '500px',
+          borderRadius: '12px',
+          // overflow: 'hidden',
+          // border: '1px solid #ddd',
+          // boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+        }}
+      >
+        <ModalHeader
+          toggle={toggleNotificationModal}
+          style={{
+            backgroundColor: notification.type === 'success' ? '#4CAF50' : '#F44336',
+            color: '#fff',
+            borderBottom: 'none',
+            padding: '15px',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}
+        >
+          <h3>{notification.type === 'success' ? 'Thành công!' : ''}</h3>
+        </ModalHeader>
+        <ModalBody
+          style={{
+            padding: '20px',
+            backgroundColor: '#fff',
+            fontSize: '16px',
+            color: '#333',
+            textAlign: 'center',
+            lineHeight: '1.5'
+          }}
+        >
+          {notification.message}
+        </ModalBody>
+        <ModalFooter
+          style={{
+            borderTop: 'none',
+            padding: '10px',
+            display: 'flex',
+            justifyContent: 'center'
+          }}
+        >
+          <Button
+            color="secondary"
+            onClick={toggleNotificationModal}
+            style={{
+              backgroundColor: '#007bff',
+              borderColor: '#007bff',
+              color: '#fff',
+              padding: '10px 20px',
+              borderRadius: '5px',
+              fontSize: '16px',
+              fontWeight: '600',
+              transition: 'background-color 0.3s',
+            }}
+          >
+            Đóng
+          </Button>
+        </ModalFooter>
+      </Modal>
+
       <Modal isOpen={modal} toggle={toggleModal}>
         <ModalHeader toggle={toggleModal}>
           <h2>Thêm danh mục</h2>
@@ -306,7 +390,13 @@ const Category = () => {
           </FormGroup>
         </ModalBody>
         <ModalFooter>
-          <Button color="primary" onClick={addCategory}>Thêm</Button>{' '}
+          <Button color="primary" onClick={addCategory}
+            disabled={
+              !(
+                name.trim() !== ''
+              )
+            }
+          >Thêm</Button>{' '}
           <Button color="secondary" onClick={toggleModal}>Hủy</Button>
         </ModalFooter>
       </Modal>

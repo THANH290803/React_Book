@@ -316,6 +316,7 @@ const Order = () => {
                 </tbody>
               </Table>
               <CardFooter className="py-4">
+              {!search && (
                 <nav aria-label="...">
                   <Pagination
                     className="pagination justify-content-end mb-0"
@@ -370,6 +371,7 @@ const Order = () => {
                     </PaginationItem>
                   </Pagination>
                 </nav>
+              )}
               </CardFooter>
             </Card>
           </div>

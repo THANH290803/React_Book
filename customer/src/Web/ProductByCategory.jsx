@@ -3,6 +3,8 @@ import { Link, useParams, useLocation } from "react-router-dom";
 import axios from 'axios';
 import HeaderPage from "../Component/HeaderPage";
 import Footer from "../Component/Footer";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function ProductByCategory() {
     const { id } = useParams();
@@ -269,11 +271,15 @@ function ProductByCategory() {
                 ]
             });
             console.log(response.data);
-            setCartItems([...cartItems, product]);
-            alert('Added to cart successfully!');
+            if (response.data.success) {
+                setCartItems([...cartItems, product]);
+                toast.success(`"${product.name}" đã được thêm vào giỏ hàng thành công!`);
+            } else if (response.data.out_of_stock_items.length > 0) {
+                toast.error(`"${product.name}" đã hết hàng`);
+            }
         } catch (error) {
             console.error('Error adding to cart:', error);
-            alert('Failed to add to cart. Please try again.');
+            toast.error(`"${product.name}" đã được thêm vào giỏ hàng thất bại!`);
         }
     };
 
@@ -526,6 +532,16 @@ function ProductByCategory() {
                             ) : (
                                 <p style={{ marginLeft: '550px' }}>Không có sản phẩm đó</p>
                             )}
+                            <ToastContainer
+                                position="top-right"
+                                autoClose={3000}
+                                hideProgressBar={false}
+                                closeOnClick
+                                pauseOnHover
+                                draggable
+                                theme="colored"
+                                style={{ width: 'auto' }}
+                            />
                             <div className="col-12 pb-1">
                                 <nav aria-label="Page navigation">
                                     <ul className="pagination mb-3" style={{ float: 'right' }}>
