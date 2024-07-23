@@ -45,6 +45,8 @@ import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import Login from "./Login";
+import 'react-confirm-alert/src/react-confirm-alert.css';
+import { confirmAlert } from 'react-confirm-alert';
 
 
 const Category = () => {
@@ -141,6 +143,56 @@ const Category = () => {
     }
   };
 
+  // Xử lý nhấn nút xóa
+  const handleDeleteClick = (categoryId, categoryName) => {
+    confirmAlert({
+      title: 'Xác nhận xóa',
+      message: `Bạn có chắc chắn muốn xóa danh mục '${categoryName}' không?`,
+      customUI: ({ title, message, onClose }) => (
+        <div className='custom-ui'>
+          <h1 className='modal-title'>{title}</h1>
+          <br />
+          <p className='modal-message'>{message}</p>
+          <div className="modal-footer">
+            <button
+              onClick={() => {
+                // Đóng hộp thoại và thực hiện xóa khi nhấn nút "Xóa"
+                deleteCategory(categoryId);
+                onClose();
+              }}
+              className='delete-button'
+              style={{
+                backgroundColor: 'red',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '22px',
+                cursor: 'pointer',
+                marginRight: '10px',
+              }}
+            >
+              Xóa
+            </button>
+            <button
+              onClick={onClose} // Đóng hộp thoại khi nhấn nút "Hủy"
+              className='cancel-button'
+              style={{
+                backgroundColor: 'grey',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '22px',
+                cursor: 'pointer',
+              }}
+            >
+              Hủy
+            </button>
+          </div>
+        </div>
+      )
+    });
+  };
+
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
 
@@ -168,7 +220,7 @@ const Category = () => {
                 <DropdownItem onClick={() => { setEditedCategory(row); toggleEditModal(); }} style={{ color: 'orange' }}>
                   <FontAwesomeIcon icon={faEdit} className="mr-2" /> Sửa danh mục
                 </DropdownItem>
-                <DropdownItem onClick={() => deleteCategory(row.id)} style={{ color: 'red' }}>
+                <DropdownItem onClick={() => handleDeleteClick(row.id, row.name)} style={{ color: 'red' }}>
                   <FontAwesomeIcon icon={faTrashAlt} className="mr-2" /> Xóa danh mục
                 </DropdownItem>
               </DropdownMenu>

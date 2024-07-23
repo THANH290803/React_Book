@@ -42,6 +42,8 @@ import Header from "components/Headers/Header.js";
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Login from "./Login";
+import 'react-confirm-alert/src/react-confirm-alert.css';
+import { confirmAlert } from 'react-confirm-alert';
 
 const Payment = () => {
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -196,6 +198,58 @@ const Payment = () => {
     }
   };
 
+  // Xử lý nhấn nút xóa
+  const handleDeleteClick = (paymentId, paymentName) => {
+    confirmAlert({
+      title: 'Xác nhận xóa',
+      message: `Bạn có chắc chắn muốn xóa phương thức thanh toán '${paymentName}' không?`,
+      customUI: ({ title, message, onClose }) => (
+        <div className='custom-ui'>
+          <h1 className='modal-title'>{title}</h1>
+          <br />
+          <p className='modal-message'>{message}</p>
+          <div className="modal-footer">
+            <button
+              onClick={() => {
+                // Đóng hộp thoại và thực hiện xóa khi nhấn nút "Xóa"
+                deleteData(paymentId);
+                onClose();
+              }}
+              className='delete-button'
+              style={{
+                backgroundColor: 'red',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '22px',
+                cursor: 'pointer',
+                marginRight: '10px',
+              }}
+            >
+              Xóa
+            </button>
+            <button
+              onClick={onClose} // Đóng hộp thoại khi nhấn nút "Hủy"
+              className='cancel-button'
+              style={{
+                backgroundColor: 'grey',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '22px',
+                cursor: 'pointer',
+              }}
+            >
+              Hủy
+            </button>
+          </div>
+        </div>
+      )
+    });
+  };
+
+
+
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
 
@@ -287,7 +341,7 @@ const Payment = () => {
                                 Sửa phương thức thanh toán
                               </DropdownItem>
                               <DropdownItem
-                                onClick={() => deleteData(method.id)}
+                                onClick={() => handleDeleteClick(method.id, method.name)}
                               >
                                 Xoá phương thức thanh toán
                               </DropdownItem>

@@ -42,6 +42,8 @@ import Header from "components/Headers/Header.js";
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Login from "./Login";
+import 'react-confirm-alert/src/react-confirm-alert.css';
+import { confirmAlert } from 'react-confirm-alert';
 
 const Employee = () => { // http://127.0.0.1:8000/api/member
   const [employees, setEmpoyees] = useState([]);
@@ -231,6 +233,56 @@ const Employee = () => { // http://127.0.0.1:8000/api/member
     }
   };
 
+  // Xử lý nhấn nút xóa
+  const handleDeleteClick = (employeeId, employeeName) => {
+    confirmAlert({
+      title: 'Xác nhận xóa',
+      message: `Bạn có chắc chắn muốn xóa nhân viên '${employeeName}' không?`,
+      customUI: ({ title, message, onClose }) => (
+        <div className='custom-ui'>
+          <h1 className='modal-title'>{title}</h1>
+          <br />
+          <p className='modal-message'>{message}</p>
+          <div className="modal-footer">
+            <button
+              onClick={() => {
+                // Đóng hộp thoại và thực hiện xóa khi nhấn nút "Xóa"
+                deleteData(employeeId);
+                onClose();
+              }}
+              className='delete-button'
+              style={{
+                backgroundColor: 'red',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '22px',
+                cursor: 'pointer',
+                marginRight: '10px',
+              }}
+            >
+              Xóa
+            </button>
+            <button
+              onClick={onClose} // Đóng hộp thoại khi nhấn nút "Hủy"
+              className='cancel-button'
+              style={{
+                backgroundColor: 'grey',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '22px',
+                cursor: 'pointer',
+              }}
+            >
+              Hủy
+            </button>
+          </div>
+        </div>
+      )
+    });
+  };
+
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
 
@@ -340,7 +392,7 @@ const Employee = () => { // http://127.0.0.1:8000/api/member
                                 Sửa
                               </DropdownItem>
                               <DropdownItem
-                                onClick={() => deleteData(employee.id)}
+                                onClick={() => handleDeleteClick(employee.id, employee.username)}
                               >
                                 Xoá
                               </DropdownItem>

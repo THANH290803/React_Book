@@ -46,6 +46,8 @@ import DataTable from 'react-data-table-component';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import Login from "./Login";
+import 'react-confirm-alert/src/react-confirm-alert.css';
+import { confirmAlert } from 'react-confirm-alert';
 
 const Book = () => {
   const [books, setBooks] = useState([]);
@@ -56,6 +58,10 @@ const Book = () => {
   });
   const [search, setSearch] = useState('');
   const [filtered, setFilteredBooks] = useState([]);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const [notificationModal, setNotificationModal] = useState(false);
+
+  const toggleNotificationModal = () => setNotificationModal(!notificationModal);
 
   useEffect(() => {
     localStorage.setItem('itemsPerPage', itemsPerPage.toString());
@@ -127,6 +133,16 @@ const Book = () => {
     fetchData();
   }, []);
 
+  // Handle notifications
+  const showNotificationWithTimeout = (message, type) => {
+    setNotification({ message, type });
+    setNotificationModal(true);
+    setTimeout(() => {
+      setNotificationModal(false);
+      setNotification({ message: '', type: '' });
+    }, 3500); // 3 giây
+  };
+
   // Add
   const [modal, setModal] = useState(false);
   const [isbn, setIsbn] = useState('');
@@ -194,6 +210,7 @@ const Book = () => {
 
       fetchData(); // Assuming fetchData fetches the updated list of books
       toggleModal(); // Close modal after successful addition
+      showNotificationWithTimeout('Thêm sản phẩm thành công!', 'success');
     } catch (error) {
       if (error.response) {
         if (error.response.status === 409) {
@@ -293,6 +310,7 @@ const Book = () => {
       setPreviewImg(null);
       setErrorMessage('');
       fetchData();
+      showNotificationWithTimeout('Cập nhập sản phẩm thành công!', 'success');
     } catch (error) {
       if (error.response && error.response.status === 409) {
         // Xử lý lỗi từ phản hồi của server
@@ -338,9 +356,60 @@ const Book = () => {
       await axios.delete(`http://127.0.0.1:8000/api/book/delete/${id}`);
       // After successful deletion, refresh the publisher list or perform other actions
       fetchData();
+      showNotificationWithTimeout('Xoá sản phẩm thành công!', 'success');
     } catch (error) {
       console.error('Error deleting publisher:', error);
     }
+  };
+
+  // Xử lý nhấn nút xóa
+  const handleDeleteClick = (bookId, bookName) => {
+    confirmAlert({
+      title: 'Xác nhận xóa',
+      message: `Bạn có chắc chắn muốn xóa danh mục '${bookName}' không?`,
+      customUI: ({ title, message, onClose }) => (
+        <div className='custom-ui'>
+          <h1 className='modal-title'>{title}</h1>
+          <br />
+          <p className='modal-message'>{message}</p>
+          <div className="modal-footer">
+            <button
+              onClick={() => {
+                // Đóng hộp thoại và thực hiện xóa khi nhấn nút "Xóa"
+                deleteData(bookId);
+                onClose();
+              }}
+              className='delete-button'
+              style={{
+                backgroundColor: 'red',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '22px',
+                cursor: 'pointer',
+                marginRight: '10px',
+              }}
+            >
+              Xóa
+            </button>
+            <button
+              onClick={onClose} // Đóng hộp thoại khi nhấn nút "Hủy"
+              className='cancel-button'
+              style={{
+                backgroundColor: 'grey',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '22px',
+                cursor: 'pointer',
+              }}
+            >
+              Hủy
+            </button>
+          </div>
+        </div>
+      )
+    });
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -481,7 +550,7 @@ const Book = () => {
                                 Sửa sách
                               </DropdownItem>
                               <DropdownItem
-                                onClick={() => deleteData(book.id)}
+                                onClick={() => handleDeleteClick(book.id, book.name)}
                               >
                                 Xoá sách
                               </DropdownItem>
@@ -561,6 +630,73 @@ const Book = () => {
           </div>
         </Row>
       </Container>
+
+      {/* Notification Modal */}
+      <Modal
+        className="modal-dialog-centered"
+        size="lg"
+        isOpen={notificationModal}
+        toggle={toggleNotificationModal}
+        style={{
+          maxWidth: '500px',
+          borderRadius: '12px',
+          // overflow: 'hidden',
+          // border: '1px solid #ddd',
+          // boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+        }}
+      >
+        <ModalHeader
+          toggle={toggleNotificationModal}
+          style={{
+            backgroundColor: notification.type === 'success' ? '#4CAF50' : '#F44336',
+            color: '#fff',
+            borderBottom: 'none',
+            padding: '15px',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}
+        >
+          <h3>{notification.type === 'success' ? 'Thành công!' : ''}</h3>
+        </ModalHeader>
+        <ModalBody
+          style={{
+            padding: '20px',
+            backgroundColor: '#fff',
+            fontSize: '16px',
+            color: '#333',
+            textAlign: 'center',
+            lineHeight: '1.5'
+          }}
+        >
+          {notification.message}
+        </ModalBody>
+        <ModalFooter
+          style={{
+            borderTop: 'none',
+            padding: '10px',
+            display: 'flex',
+            justifyContent: 'center'
+          }}
+        >
+          <Button
+            color="secondary"
+            onClick={toggleNotificationModal}
+            style={{
+              backgroundColor: '#007bff',
+              borderColor: '#007bff',
+              color: '#fff',
+              padding: '10px 20px',
+              borderRadius: '5px',
+              fontSize: '16px',
+              fontWeight: '600',
+              transition: 'background-color 0.3s',
+            }}
+          >
+            Đóng
+          </Button>
+        </ModalFooter>
+      </Modal>
 
       <Modal isOpen={modal} toggle={toggleModal} className="modal-xl">
         <ModalHeader style={{ paddingBottom: "0px" }} toggle={toggleModal}><h2>Thêm sách mới</h2></ModalHeader>

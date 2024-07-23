@@ -45,6 +45,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faSave } from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment'; // Import moment library
 import 'moment/locale/vi';
+import 'react-confirm-alert/src/react-confirm-alert.css';
+import { confirmAlert } from 'react-confirm-alert';
 
 const Order = () => {
   const [orders, setOrders] = useState([]);
@@ -55,20 +57,36 @@ const Order = () => {
   });
   const [search, setSearch] = useState('');
   const [filtered, setFiltered] = useState([]);
+  const [status, setStatus] = useState('1');
 
   useEffect(() => {
     localStorage.setItem('itemsPerPage', itemsPerPage.toString());
   }, [itemsPerPage]);
 
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const [notificationModal, setNotificationModal] = useState(false);
+
+  const toggleNotificationModal = () => setNotificationModal(!notificationModal);
+
   // Function to fetch orders based on status
   const fetchOrders = async (status) => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/order/${status}`);
+      const response = await axios.get(`http://127.0.0.1:8000/api/order/${status}?page=${currentPage}&itemsPerPage=${itemsPerPage}`);
       setOrders(response.data.orders);
       setFiltered(response.data.orders);
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
+  };
+
+  // Handle notifications
+  const showNotificationWithTimeout = (message, type) => {
+    setNotification({ message, type });
+    setNotificationModal(true);
+    setTimeout(() => {
+      setNotificationModal(false);
+      setNotification({ message: '', type: '' });
+    }, 3500); // 3 giây
   };
 
   // Logic for pagination
@@ -92,8 +110,8 @@ const Order = () => {
 
   // Fetch orders on component mount
   useEffect(() => {
-    fetchOrders('1'); // Default status or initial fetch
-  }, []);
+    fetchOrders(status);
+  }, [status, currentPage, itemsPerPage]);
 
   // Function to format price
   const formatPrice = (price) => {
@@ -117,18 +135,96 @@ const Order = () => {
       // Update orders state after successful approval
       const updatedOrders = orders.map(order => {
         if (order.id === orderId) {
-          return { ...order, status: '2' }; // Update order status to '2' (or appropriate status)
+          let newStatus = order.status; // Default to current status
+
+          // Determine new status and notification message
+          if (order.status === '1') {
+            newStatus = '2';
+            showNotificationWithTimeout('Duyệt đơn hàng thành công!', 'success');
+          } else if (order.status === '2') {
+            newStatus = '3';
+            showNotificationWithTimeout('Giao hàng cho đơn vị vận chuyển thành công!', 'success');
+          }
+
+          return { ...order, status: newStatus };
         }
         return order;
       });
 
       setOrders(updatedOrders);
       setFiltered(updatedOrders);
-      window.location.reload(); // Consider using state management instead of window.location.reload()
+      fetchOrders(status, currentPage, itemsPerPage);
     } catch (error) {
       console.error('Lỗi khi duyệt đơn hàng:', error);
     }
   };
+
+  const cancelOrder = async (orderId) => {
+    try {
+      const response = await axios.put(`http://127.0.0.1:8000/api/order/${orderId}/cancel`);
+  
+      // Check if the response is successful
+      if (response.status === 200) {
+        showNotificationWithTimeout('Đơn hàng đã được hủy thành công!', 'success');
+        fetchOrders(status, currentPage, itemsPerPage);
+      } else {
+        showNotificationWithTimeout('Không thể hủy đơn hàng.', 'error');
+      }
+    } catch (error) {
+      console.error('Lỗi khi hủy đơn hàng:', error);
+      showNotificationWithTimeout('Có lỗi xảy ra khi hủy đơn hàng.', 'error');
+    }
+  };
+
+  const handleCancelClick = (orderId, codeOrder) => {
+    confirmAlert({
+      title: 'Xác nhận huỷ đơn hàng',
+      message: `Bạn có chắc chắn muốn huỷ đơn hàng với mã đơn '${codeOrder}' không?`,
+      customUI: ({ title, message, onClose }) => (
+        <div className='custom-ui'>
+          <h1 className='modal-title'>{title}</h1>
+          <br />
+          <p className='modal-message'>{message}</p>
+          <div className="modal-footer">
+            <button
+              onClick={async () => {
+                // Close the dialog and perform cancellation when "Xóa" is clicked
+                await cancelOrder(orderId); // Call the cancelOrder function
+                onClose();
+              }}
+              className='delete-button'
+              style={{
+                backgroundColor: 'red',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '22px',
+                cursor: 'pointer',
+                marginRight: '10px',
+              }}
+            >
+              Xác nhận huỷ
+            </button>
+            <button
+              onClick={onClose} // Close the dialog when "Hủy" is clicked
+              className='cancel-button'
+              style={{
+                backgroundColor: 'grey',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '22px',
+                cursor: 'pointer',
+              }}
+            >
+              Không huỷ
+            </button>
+          </div>
+        </div>
+      ),
+    });
+  };
+  
 
   // Order Details
   const [modalOpen, setModalOpen] = useState(false);
@@ -186,39 +282,34 @@ const Order = () => {
           <div className="col">
             <Card className="shadow">
               <CardHeader className="border-0" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <h3 className="mb-0">Quản lý đơn hàng</h3>
-                <div class="bg-transparent card-header" style={{ padding: '0px' }}>
-                  <div class="align-items-center row">
-                    <div class="col">
-                      <ul class="justify-content-end nav nav-pills">
-                        <li class="nav-item">
-                          <a type="button" class={`py-2 px-3 nav-link ${orders.length > 0 && orders[0].status === '1' ? 'active' : ''}`} onClick={() => fetchOrders('1')}>
-                            <span class="d-none d-md-block">Chờ xác nhận ({orders.filter(order => order.status === '1').length})</span>
-                            <span class="d-md-none">Wait for confirmation</span>
+                <h3 className="mb-0">Order Management</h3>
+                <div className="bg-transparent card-header" style={{ padding: '0px' }}>
+                  <div className="align-items-center row">
+                    <div className="col">
+                      <ul className="justify-content-end nav nav-pills">
+                        <li className="nav-item">
+                          <a type="button" className={`py-2 px-3 nav-link ${status === '1' ? 'active' : ''}`} onClick={() => setStatus('1')}>
+                            <span className="d-none d-md-block">Chờ xác nhận ({orders.filter(order => order.status === '1').length})</span>
                           </a>
                         </li>
-                        <li class="nav-item">
-                          <a data-toggle="tab" type="button" class={`py-2 px-3 nav-link ${orders.length > 0 && orders[0].status === '2' ? 'active' : ''}`} onClick={() => fetchOrders('2')}>
-                            <span class="d-none d-md-block">Đã duyệt ({orders.filter(order => order.status === '2').length})</span>
-                            <span class="d-md-none">Approved</span>
+                        <li className="nav-item">
+                          <a type="button" className={`py-2 px-3 nav-link ${status === '2' ? 'active' : ''}`} onClick={() => setStatus('2')}>
+                            <span className="d-none d-md-block">Đã xác nhận ({orders.filter(order => order.status === '2').length})</span>
                           </a>
                         </li>
-                        <li class="nav-item">
-                          <a data-toggle="tab" href="#pablo" class={`py-2 px-3 nav-link ${orders.length > 0 && orders[0].status === '3' ? 'active' : ''}`} onClick={() => fetchOrders('3')}>
-                            <span class="d-none d-md-block">Đang giao hàng ({orders.filter(order => order.status === '3').length})</span>
-                            <span class="d-md-none">Shipping</span>
+                        <li className="nav-item">
+                          <a type="button" className={`py-2 px-3 nav-link ${status === '3' ? 'active' : ''}`} onClick={() => setStatus('3')}>
+                            <span className="d-none d-md-block">Đang giao hàng ({orders.filter(order => order.status === '3').length})</span>
                           </a>
                         </li>
-                        <li class="nav-item">
-                          <a data-toggle="tab" href="#pablo" class={`py-2 px-3 nav-link ${orders.length > 0 && orders[0].status === '4' ? 'active' : ''}`} onClick={() => fetchOrders('4')}>
-                            <span class="d-none d-md-block">Hoàn thành ({orders.filter(order => order.status === '4').length})</span>
-                            <span class="d-md-none">Complete</span>
+                        <li className="nav-item">
+                          <a type="button" className={`py-2 px-3 nav-link ${status === '4' ? 'active' : ''}`} onClick={() => setStatus('4')}>
+                            <span className="d-none d-md-block">Hoàn thành ({orders.filter(order => order.status === '4').length})</span>
                           </a>
                         </li>
-                        <li class="nav-item">
-                          <a data-toggle="tab" href="#pablo" class={`py-2 px-3 nav-link ${orders.length > 0 && orders[0].status === '5' ? 'active' : ''}`} onClick={() => fetchOrders('5')}>
-                            <span class="d-none d-md-block">Huỷ đơn hàng ({orders.filter(order => order.status === '5').length})</span>
-                            <span class="d-md-none">Cancel</span>
+                        <li className="nav-item">
+                          <a type="button" className={`py-2 px-3 nav-link ${status === '5' ? 'active' : ''}`} onClick={() => setStatus('5')}>
+                            <span className="d-none d-md-block">Huỷ đơn hàng ({orders.filter(order => order.status === '5').length})</span>
                           </a>
                         </li>
                       </ul>
@@ -258,6 +349,7 @@ const Order = () => {
                     <th scope="col">Tên khách hàng</th>
                     <th scope="col">Số điện thoại khách hàng</th>
                     <th scope="col">Địa chỉ khách hàng</th>
+                    <th scope="col">Ngày tạo đơn</th>
                     <th scope="col">Tổng tiền</th>
                     <th scope="col">Phương thức thanh toán</th>
                     <th scope="col" />
@@ -280,6 +372,7 @@ const Order = () => {
                       <td>{order.name_customer}</td>
                       <td>{order.phone_customer}</td>
                       <td>{order.address_customer}</td>
+                      <td>{moment(order.created_at).format('DD/MM/YYYY HH:mm:ss')}</td>
                       <td>{formatPrice(order.totalPrice)}</td>
                       <td>{order.payment_method_name}</td>
                       {order.status !== '3' && order.status !== '4' && order.status !== '5' && (
@@ -302,9 +395,15 @@ const Order = () => {
                                 </DropdownItem>
                               )}
                               {order.status === '2' && (
-                                <DropdownItem onClick={() => handleApproveOrder(order.id)}>
-                                  Giao hàng
-                                </DropdownItem>
+                                <>
+                                  <DropdownItem onClick={() => handleApproveOrder(order.id)}>
+                                    Giao hàng
+                                  </DropdownItem>
+
+                                  <DropdownItem onClick={() => handleCancelClick(order.id, order.code_order)}>
+                                    Huỷ đơn hàng
+                                  </DropdownItem>
+                                </>
                               )}
                               {/* Add more conditional dropdown items based on other statuses */}
                             </DropdownMenu>
@@ -316,67 +415,134 @@ const Order = () => {
                 </tbody>
               </Table>
               <CardFooter className="py-4">
-              {!search && (
-                <nav aria-label="...">
-                  <Pagination
-                    className="pagination justify-content-end mb-0"
-                    listClassName="justify-content-end mb-0"
-                  >
-                    <PaginationItem
-                      className={`${currentPage === 1 ? 'disabled' : ''
-                        }`}
+                {!search && (
+                  <nav aria-label="...">
+                    <Pagination
+                      className="pagination justify-content-end mb-0"
+                      listClassName="justify-content-end mb-0"
                     >
-                      <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(currentPage - 1);
-                        }}
-                        tabIndex="-1"
-                      >
-                        <i className="fas fa-angle-left" />
-                        <span className="sr-only">Previous</span>
-                      </PaginationLink>
-                    </PaginationItem>
-                    {Array.from({ length: Math.ceil(orders.length / itemsPerPage) }).map((_, index) => (
                       <PaginationItem
-                        key={index}
-                        className={`${currentPage === index + 1 ? 'active' : ''}`}
+                        className={`${currentPage === 1 ? 'disabled' : ''
+                          }`}
                       >
                         <PaginationLink
                           href="#pablo"
                           onClick={(e) => {
                             e.preventDefault();
-                            setCurrentPage(index + 1);
+                            setCurrentPage(currentPage - 1);
                           }}
+                          tabIndex="-1"
                         >
-                          {index + 1}
+                          <i className="fas fa-angle-left" />
+                          <span className="sr-only">Previous</span>
                         </PaginationLink>
                       </PaginationItem>
-                    ))}
-                    <PaginationItem
-                      className={`${currentPage === Math.ceil(orders.length / itemsPerPage) ? 'disabled' : ''
-                        }`}
-                    >
-                      <PaginationLink
-                        href="#pablo"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(currentPage + 1);
-                        }}
+                      {Array.from({ length: Math.ceil(orders.length / itemsPerPage) }).map((_, index) => (
+                        <PaginationItem
+                          key={index}
+                          className={`${currentPage === index + 1 ? 'active' : ''}`}
+                        >
+                          <PaginationLink
+                            href="#pablo"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(index + 1);
+                            }}
+                          >
+                            {index + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem
+                        className={`${currentPage === Math.ceil(orders.length / itemsPerPage) ? 'disabled' : ''
+                          }`}
                       >
-                        <i className="fas fa-angle-right" />
-                        <span className="sr-only">Next</span>
-                      </PaginationLink>
-                    </PaginationItem>
-                  </Pagination>
-                </nav>
-              )}
+                        <PaginationLink
+                          href="#pablo"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(currentPage + 1);
+                          }}
+                        >
+                          <i className="fas fa-angle-right" />
+                          <span className="sr-only">Next</span>
+                        </PaginationLink>
+                      </PaginationItem>
+                    </Pagination>
+                  </nav>
+                )}
               </CardFooter>
             </Card>
           </div>
         </Row>
       </Container>
+
+      {/* Notification Modal */}
+      <Modal
+        className="modal-dialog-centered"
+        size="lg"
+        isOpen={notificationModal}
+        toggle={toggleNotificationModal}
+        style={{
+          maxWidth: '500px',
+          borderRadius: '12px',
+          // overflow: 'hidden',
+          // border: '1px solid #ddd',
+          // boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+        }}
+      >
+        <ModalHeader
+          toggle={toggleNotificationModal}
+          style={{
+            backgroundColor: notification.type === 'success' ? '#4CAF50' : '#F44336',
+            color: '#fff',
+            borderBottom: 'none',
+            padding: '15px',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}
+        >
+          <h3>{notification.type === 'success' ? 'Thành công!' : ''}</h3>
+        </ModalHeader>
+        <ModalBody
+          style={{
+            padding: '20px',
+            backgroundColor: '#fff',
+            fontSize: '16px',
+            color: '#333',
+            textAlign: 'center',
+            lineHeight: '1.5'
+          }}
+        >
+          {notification.message}
+        </ModalBody>
+        <ModalFooter
+          style={{
+            borderTop: 'none',
+            padding: '10px',
+            display: 'flex',
+            justifyContent: 'center'
+          }}
+        >
+          <Button
+            color="secondary"
+            onClick={toggleNotificationModal}
+            style={{
+              backgroundColor: '#007bff',
+              borderColor: '#007bff',
+              color: '#fff',
+              padding: '10px 20px',
+              borderRadius: '5px',
+              fontSize: '16px',
+              fontWeight: '600',
+              transition: 'background-color 0.3s',
+            }}
+          >
+            Đóng
+          </Button>
+        </ModalFooter>
+      </Modal>
 
       {/* Show order detail */}
       <Modal isOpen={modalOpen} toggle={toggleModal} className="modal-xl">

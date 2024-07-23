@@ -5,6 +5,9 @@ import HeaderPage from "../../Component/HeaderPage";
 import Footer from "../../Component/Footer";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBoxOpen, faCheckCircle, faTruck, faClipboardCheck, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import moment from 'moment'; // Import moment library
+import 'moment/locale/vi';
+
 
 
 function Account() {
@@ -315,6 +318,7 @@ function Account() {
                                                 <tr>
                                                     <th scope="col">Mã Đơn hàng</th>
                                                     <th scope="col">Tên khách hàng</th>
+                                                    <th scope="col">Ngày đặt hàng</th>
                                                     <th scope="col">Tổng tiền</th>
                                                     {/* <th scope="col">Trạng thái</th> */}
                                                     {currentOrders.some(order => order.status === '1' || order.status === '3') && (
@@ -328,6 +332,7 @@ function Account() {
                                                         <tr key={order.code_order}>
                                                             <td>{order.code_order}</td>
                                                             <td>{order.name_customer}</td>
+                                                            <td>{moment(order.created_at).format('DD-MM-YYYY HH:mm:ss')}</td>
                                                             <td>{formatCurrencyVND(order.totalPrice)}</td>
                                                             {(() => {
                                                                 if (order.status == 3) {
