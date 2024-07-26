@@ -162,7 +162,7 @@ const Order = () => {
   const cancelOrder = async (orderId) => {
     try {
       const response = await axios.put(`http://127.0.0.1:8000/api/order/${orderId}/cancel`);
-  
+
       // Check if the response is successful
       if (response.status === 200) {
         showNotificationWithTimeout('Đơn hàng đã được hủy thành công!', 'success');
@@ -224,7 +224,7 @@ const Order = () => {
       ),
     });
   };
-  
+
 
   // Order Details
   const [modalOpen, setModalOpen] = useState(false);
@@ -669,9 +669,28 @@ const Order = () => {
             </div>
           )}
         </ModalBody>
+        {selectedOrder && (
         <ModalFooter>
+          {selectedOrder.status === '1' && (
+            <Button color="primary" onClick={() => handleApproveOrder(selectedOrder.id)}>
+              Duyệt đơn hàng
+            </Button>
+          )}
+          {selectedOrder.status === '2' && (
+            <>
+              <Button color="primary" onClick={() => handleApproveOrder(selectedOrder.id)}>
+                Giao hàng
+              </Button>
+
+              <Button color="danger" onClick={() => handleCancelClick(selectedOrder.id, selectedOrder.code_order)}>
+                Huỷ đơn hàng
+              </Button>
+            </>
+          )}
           <Button color="secondary" onClick={toggleModal}>Đóng</Button>
         </ModalFooter>
+        )}
+        <br />
       </Modal>
     </>
   );

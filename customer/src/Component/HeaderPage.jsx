@@ -31,6 +31,7 @@ function HeaderPage() {
     useEffect(() => {
         fetchCategories();
         fetchTotalProducts();
+        handleFetchMember();
     }, []);
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -55,6 +56,18 @@ function HeaderPage() {
 
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
+    const [member, setMember] = useState({});
+
+    const handleFetchMember = async () => {
+        try {
+            // Gọi API của Laravel để lấy thông tin member dựa trên memberId
+            const response = await axios.get(`http://127.0.0.1:8000/api/member/members/${user.id}`);
+            // Cập nhật state member với dữ liệu từ API
+            setMember(response.data);
+        } catch (error) {
+            console.error('Error fetching member:', error);
+        }
+    };
     const [showLoginMessage, setShowLoginMessage] = useState(false);
     // const navigate = useNavigate();
 
@@ -103,10 +116,6 @@ function HeaderPage() {
                         </form>
                     </div>
                     <div className="col-lg-3 col-6 text-right">
-                        <a href="" className="btn border">
-                            <i className="fas fa-heart text-primary" />
-                            <span className="badge">0</span>
-                        </a>
                         <a type='button' className="btn border" onClick={handleCartClick}>
                             <i className="fas fa-shopping-cart text-primary" />
                             <span className="badge">{totalProducts}</span>
@@ -229,7 +238,7 @@ function HeaderPage() {
                                     {isAuthenticated ? (
                                         <>
                                             <NavLink to={'/account'} className="nav-item nav-link" activeClassName="active">
-                                                Tài khoản
+                                                {member.username}
                                             </NavLink>
                                             <div className="nav-item nav-link">/</div>
                                             <a type='button' className="nav-item nav-link" onClick={handleLogout}>

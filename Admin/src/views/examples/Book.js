@@ -705,11 +705,11 @@ const Book = () => {
             <Col md="6">
               <FormGroup>
                 <Label for="isbn">ISBN</Label>
-                <Input type="text" name="isbn" id="isbn" value={isbn} onChange={(e) => setIsbn(e.target.value)} maxLength={10}
+                <Input type="text" name="isbn" id="isbn" value={isbn} onChange={(e) => setIsbn(e.target.value)} maxLength={13}
                   onInput={(e) => {
                     const inputValue = e.target.value;
-                    if (inputValue.length > 10) {
-                      e.target.value = inputValue.slice(0, 10); // Cắt bớt giá trị nhập vào nếu nó vượt quá 10 ký tự
+                    if (inputValue.length > 13) {
+                      e.target.value = inputValue.slice(0, 13); // Cắt bớt giá trị nhập vào nếu nó vượt quá 10 ký tự
                     }
                     setIsbn(e.target.value);
                   }}
@@ -790,10 +790,10 @@ const Book = () => {
             <Col md="6">
               <FormGroup>
                 <Label for="isbn">ISBN</Label>
-                <Input type="text" name="isbn" id="isbn" value={editedData.isbn} onChange={(e) => setEditedData({ ...editedData, isbn: e.target.value })} maxLength={10}
+                <Input type="text" name="isbn" id="isbn" value={editedData.isbn} onChange={(e) => setEditedData({ ...editedData, isbn: e.target.value })} maxLength={13}
                   onInput={(e) => {
-                    if (e.target.value.length > 10) {
-                      e.target.value = e.target.value.slice(0, 10); // Cắt bớt giá trị nhập vào nếu nó vượt quá 10 ký tự
+                    if (e.target.value.length > 13) {
+                      e.target.value = e.target.value.slice(0, 13); // Cắt bớt giá trị nhập vào nếu nó vượt quá 10 ký tự
                     }
                     setEditedData({ ...editedData, isbn: e.target.value });
                   }}

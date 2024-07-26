@@ -18,8 +18,39 @@
 
 // reactstrap components
 import { Card, CardBody, CardTitle, Container, Row, Col } from "reactstrap";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const Header = () => {
+  const [statistics, setStatistics] = useState({
+    monthly_revenue: 0,
+    total_pending_orders: 0,
+    current_month_revenue: 0,
+    current_month_books_sold: 0,
+  });
+
+  // Fetch the data from the API
+  const fetchData = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/statistical");
+      setStatistics(response.data);
+    } catch (error) {
+      console.error("Error fetching the statistics:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const formatCurrency = (amount) => {
+    if (amount == null || amount === '') return '0 VND';
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(amount).replace('₫', '').trim() + ' VND';
+  };
+
   return (
     <>
       <div className="header bg-gradient-info pb-8 pt-5 pt-md-8">
@@ -27,7 +58,7 @@ const Header = () => {
           <div className="header-body">
             {/* Card stats */}
             <Row>
-              <Col lg="6" xl="3">
+              <Col lg="6" xl="4">
                 <Card className="card-stats mb-4 mb-xl-0">
                   <CardBody>
                     <Row>
@@ -39,7 +70,7 @@ const Header = () => {
                           Doanh thu
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
-                          350.897
+                          {formatCurrency(statistics.current_month_revenue)}
                         </span>
                       </div>
                       <Col className="col-auto">
@@ -54,7 +85,7 @@ const Header = () => {
                   </CardBody>
                 </Card>
               </Col>
-              <Col lg="6" xl="3">
+              <Col lg="6" xl="4">
                 <Card className="card-stats mb-4 mb-xl-0">
                   <CardBody>
                     <Row>
@@ -65,7 +96,7 @@ const Header = () => {
                         >
                           Đơn hàng chưa xác nhận
                         </CardTitle>
-                        <span className="h2 font-weight-bold mb-0">44</span>
+                        <span className="h2 font-weight-bold mb-0">{statistics.total_pending_orders}</span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-warning text-white rounded-circle shadow">
@@ -79,7 +110,7 @@ const Header = () => {
                   </CardBody>
                 </Card>
               </Col>
-              <Col lg="6" xl="3">
+              <Col lg="6" xl="4">
                 <Card className="card-stats mb-4 mb-xl-0">
                   <CardBody>
                     <Row>
@@ -90,7 +121,7 @@ const Header = () => {
                         >
                           Sách đã bán
                         </CardTitle>
-                        <span className="h2 font-weight-bold mb-0">924</span>
+                        <span className="h2 font-weight-bold mb-0">{statistics.current_month_books_sold}</span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-yellow text-white rounded-circle shadow">
@@ -104,7 +135,7 @@ const Header = () => {
                   </CardBody>
                 </Card>
               </Col>
-              <Col lg="6" xl="3">
+              {/* <Col lg="6" xl="3">
                 <Card className="card-stats mb-4 mb-xl-0">
                   <CardBody>
                     <Row>
@@ -128,7 +159,7 @@ const Header = () => {
                     </p>
                   </CardBody>
                 </Card>
-              </Col>
+              </Col> */}
             </Row>
           </div>
         </Container>

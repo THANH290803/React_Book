@@ -19,7 +19,7 @@ function Checkout() {
     const totalPrice = calculateTotalPrice();
 
     const [paymentMethods, setPaymentMethods] = useState([]);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(1);
 
     const [customerName, setCustomerName] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
@@ -276,6 +276,7 @@ function Checkout() {
                                                 name="payment"
                                                 value={method.id}
                                                 id={method.id}
+                                                checked={selectedPaymentMethod === method.id}
                                                 onChange={() => setSelectedPaymentMethod(method.id)}
                                             />
                                             <label className="custom-control-label" htmlFor={method.id}>

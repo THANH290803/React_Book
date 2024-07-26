@@ -7,8 +7,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBoxOpen, faCheckCircle, faTruck, faClipboardCheck, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment'; // Import moment library
 import 'moment/locale/vi';
-
-
+import { Modal, Button, Row, Col } from 'react-bootstrap';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Account() {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -77,6 +78,8 @@ function Account() {
             if (response.status === 200) {
                 // Handle success: Update UI or fetch orders again
                 fetchOrders(); // Example: Refresh orders after status update
+                const order = orders.find(order => order.id === orderId);
+                toast.success(`"${order.code_order}" hoàn thành đơn hàng. Cảm ơn bạn đã ủng hộ chúng tôi!`);
             } else {
                 // Handle error if needed
                 console.error('Failed to approve order');
@@ -92,6 +95,8 @@ function Account() {
             if (response.status === 200) {
                 // Handle success: Update UI or fetch orders again
                 fetchOrders(); // Fetch updated list of orders
+                const order = orders.find(order => order.id === orderId);
+                toast.success(`"${order.code_order}" huỷ đơn hàng thành công!`);
             } else {
                 // Handle error if needed
                 console.error('Failed to cancel order:', response.data.message);
@@ -101,12 +106,51 @@ function Account() {
             console.error('Error cancelling order:', error);
         }
     };
-    
 
-    function formatCurrencyVND(amount) {
-        return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND';
-    }       
-    
+
+    const formatCurrencyVND = (price) => {
+        if (typeof price !== 'number') {
+            price = parseFloat(price);
+        }
+        return price.toLocaleString('vi-VN') + ' VND';
+    };
+
+    // Order Details
+    const [showModal, setShowModal] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [modalPosition, setModalPosition] = useState({ top: '50%', left: '50%' });
+
+
+    const handleOrderClick = (order, e) => {
+        e.preventDefault();  // Prevent default action if necessary
+
+        setSelectedOrder(order);
+        setShowModal(true);
+
+        const buttonRect = e.target.getBoundingClientRect();
+        setModalPosition({
+            top: `${buttonRect.top + window.scrollY}px`,
+            left: `${buttonRect.left + window.scrollX}px`,
+        });
+    };
+
+    const [showModalCancel, setShowModalCancel] = useState(false);
+    const [selectedOrderId, setSelectedOrderId] = useState(null);
+
+    const handleShow = (orderId) => {
+        setSelectedOrderId(orderId);
+        setShowModalCancel(true);
+    };
+
+    const handleClose = () => setShowModalCancel(false);
+
+    const handleConfirmCancel = () => {
+        if (selectedOrderId !== null) {
+            handleCancelOrder(selectedOrderId);
+            setSelectedOrderId(null);
+        }
+        setShowModalCancel(false);
+    };
 
     return (
         <>
@@ -248,10 +292,10 @@ function Account() {
                         <div className="col-lg-8">
                             {editingProfile ? (
                                 <div className="card">
-                                    <h2 style={{textAlign: 'center', paddingTop: '20px', paddingBottom: '10px'}}>Thông tin cá nhân</h2>
+                                    <h2 style={{ textAlign: 'center', paddingTop: '20px', paddingBottom: '10px' }}>Thông tin cá nhân</h2>
                                     <div className="card-body">
                                         <div className="row mb-3">
-                                            <div className="col-sm-3" style={{paddingTop: '10px'}}>
+                                            <div className="col-sm-3" style={{ paddingTop: '10px' }}>
                                                 <h6 className="mb-0">Họ và tên</h6>
                                             </div>
                                             <div className="col-sm-9 text-secondary">
@@ -263,7 +307,7 @@ function Account() {
                                             </div>
                                         </div>
                                         <div className="row mb-3">
-                                            <div className="col-sm-3" style={{paddingTop: '10px'}}>
+                                            <div className="col-sm-3" style={{ paddingTop: '10px' }}>
                                                 <h6 className="mb-0">Email</h6>
                                             </div>
                                             <div className="col-sm-9 text-secondary">
@@ -275,7 +319,7 @@ function Account() {
                                             </div>
                                         </div>
                                         <div className="row mb-3">
-                                            <div className="col-sm-3" style={{paddingTop: '10px'}}>
+                                            <div className="col-sm-3" style={{ paddingTop: '10px' }}>
                                                 <h6 className="mb-0">Số điện thoại</h6>
                                             </div>
                                             <div className="col-sm-9 text-secondary">
@@ -287,7 +331,7 @@ function Account() {
                                             </div>
                                         </div>
                                         <div className="row mb-3">
-                                            <div className="col-sm-3" style={{paddingTop: '10px'}}>
+                                            <div className="col-sm-3" style={{ paddingTop: '10px' }}>
                                                 <h6 className="mb-0">Địa chỉ</h6>
                                             </div>
                                             <div className="col-sm-9 text-secondary">
@@ -330,7 +374,7 @@ function Account() {
                                                 {currentOrders.length > 0 ? (
                                                     currentOrders.map(order => (
                                                         <tr key={order.code_order}>
-                                                            <td>{order.code_order}</td>
+                                                            <td><a className='no-underline' type='button' href='#' onClick={(e) => handleOrderClick(order, e)}>{order.code_order}</a></td>
                                                             <td>{order.name_customer}</td>
                                                             <td>{moment(order.created_at).format('DD-MM-YYYY HH:mm:ss')}</td>
                                                             <td>{formatCurrencyVND(order.totalPrice)}</td>
@@ -346,7 +390,7 @@ function Account() {
                                                                 } else if (order.status == 1) {
                                                                     return (
                                                                         <td style={{ textAlign: 'center' }}>
-                                                                            <a type='button' onClick={() => handleCancelOrder(order.id)}>
+                                                                            <a type='button' onClick={() => handleShow(order.id)}>
                                                                                 <FontAwesomeIcon icon={faTimesCircle} className="me-2" style={{ color: 'red', fontSize: '20px' }} title="Hủy đơn hàng" />
                                                                             </a>
                                                                         </td>
@@ -386,6 +430,116 @@ function Account() {
                     </div>
                 </div>
             </div>
+
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                closeOnClick
+                pauseOnHover
+                draggable
+                theme="colored"
+                style={{ width: 'auto' }} // Automatically adjusts to content width
+            />
+
+            <Modal show={showModalCancel} onHide={handleClose}>
+                <Modal.Header>
+                    <Modal.Title>Xác nhận hủy đơn hàng</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>Bạn có chắc chắn muốn hủy đơn hàng này không?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose}>
+                        Không
+                    </Button>
+                    <Button variant="primary" onClick={handleConfirmCancel}>
+                        Có
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            <Modal
+                show={showModal}
+                onHide={() => setShowModal(false)}
+                centered
+                size="xl" // Large size for better content display
+                dialogClassName="modal-100w" // Custom width for the modal
+            >
+                <Modal.Header className="bg-primary text-white" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                    <Modal.Title><h2 style={{ color: '#8B4513' }}>Chi tiết đơn hàng</h2></Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="p-4">
+                    {selectedOrder ? (
+                        <Row>
+                            {/* payment_method_name */}
+                            <Col md={6}>
+                                <h4 style={{ color: 'orange' }}>Thông tin đơn hàng</h4>
+                                <br />
+                                <p><strong>Mã đơn hàng:</strong> {selectedOrder.code_order}</p>
+                                <p><strong>Ngày đặt hàng:</strong> {moment(selectedOrder.created_at).format('DD-MM-YYYY HH:mm:ss')}</p>
+                                {/* <p><strong>Sản phẩm:</strong> {selectedOrder.items ? selectedOrder.items.map(item => item.product_name).join(', ') : 'Không có sản phẩm'}</p> */}
+                                <p><strong>Mã vận đơn: </strong> {selectedOrder.shipping_code ? selectedOrder.shipping_code : 'N/A'}</p>
+                                <p><strong>Trạng thái:</strong> {selectedOrder.status === '1' ? 'Đơn hàng mới' : selectedOrder.status === '2' ? 'Đơn hàng đã xác nhận' : selectedOrder.status === '3' ? 'Đơn hàng đang giao' : selectedOrder.status === '4' ? 'Đơn hàng đã hoàn thành' : 'Đơn hàng đã huỷ'}</p>
+                            </Col>
+                            <Col md={6}>
+                                <h4 style={{ color: '#228B22' }}>Địa chỉ giao hàng</h4>
+                                <br />
+                                <p><strong>Người nhận:</strong> {selectedOrder.name_customer}</p>
+                                <p><strong>Địa chỉ:</strong> {selectedOrder.phone_customer}</p>
+                                <p><strong>Số điện thoại:</strong> {selectedOrder.address_customer}</p>
+                                <p><strong>Phương thức thanh toán: </strong> {selectedOrder.payment_method_name}</p>
+                            </Col>
+                            <Col md={12}>
+                                <br />
+                                {selectedOrder.note ? (
+                                    <>
+                                        <p><strong>Ghi chú:</strong></p>
+                                        <div dangerouslySetInnerHTML={{ __html: selectedOrder.note }} />
+                                    </>
+                                ) : null}
+                            </Col>
+                            <Col md={12}>
+                                <h4 style={{ color: '#006699' }}>Sản phẩm đã đặt</h4>
+                                <br />
+                                <table className="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Ảnh sản phẩm</th>
+                                            <th>Tên sản phẩm</th>
+                                            <th>Số lượng</th>
+                                            <th>Giá tiền</th>
+                                            <th>Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {selectedOrder.books.map((book, index) => (
+                                            <tr key={index}>
+                                                <td><img src={book.img} width={100} height={150} alt={book.book_name} /></td>
+                                                <td>{book.book_name}</td>
+                                                <td>{book.quantity}</td>
+                                                <td>{formatCurrencyVND(book.price)}</td>
+                                                <td>{formatCurrencyVND(book.price * book.quantity)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </Col>
+                            <Col md={12}>
+                                <div className="mt-4 py-3 px-4 d-flex justify-content-between align-items-center bg-light rounded-lg">
+                                    <p className="h4 mb-0"><strong>Tổng tiền đơn hàng:</strong></p>
+                                    <p className="h4 mb-0" style={{ color: '#8a2be2', fontWeight: 'bold' }}>{formatCurrencyVND(selectedOrder.totalPrice)}</p>
+                                </div>
+                            </Col>
+                        </Row>
+                    ) : (
+                        <p className="text-center">Không có dữ liệu đơn hàng.</p>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowModal(false)}>
+                        Đóng
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
 
             <Footer />
