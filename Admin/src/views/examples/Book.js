@@ -705,7 +705,7 @@ const Book = () => {
             <Col md="6">
               <FormGroup>
                 <Label for="isbn">ISBN</Label>
-                <Input type="text" name="isbn" id="isbn" value={isbn} onChange={(e) => setIsbn(e.target.value)} maxLength={13}
+                <Input type="text" name="isbn" id="isbn" value={isbn} onChange={(e) => setIsbn(e.target.value)} maxLength={13} required
                   onInput={(e) => {
                     const inputValue = e.target.value;
                     if (inputValue.length > 13) {

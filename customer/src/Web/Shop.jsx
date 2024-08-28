@@ -19,6 +19,7 @@ function Shop() {
         '300-400': 0,
         '400-500': 0,
         '500-600': 0,
+        '700-n': 0,
     });
     const [sortType, setSortType] = useState('');
     const [showSortDropdown, setShowSortDropdown] = useState(true);
@@ -75,6 +76,7 @@ function Shop() {
         if (price > 300000 && price <= 400000) return '300-400';
         if (price > 400000 && price <= 500000) return '400-500';
         if (price > 500000 && price <= 600000) return '500-600';
+        if (price > 600000 && price <= 100000000000000) return '700-n';
         return 'other';
     };
 
@@ -120,6 +122,7 @@ function Shop() {
             '300-400': 0,
             '400-500': 0,
             '500-600': 0,
+            '700-n': 0,
         };
 
         products.forEach(product => {
@@ -326,7 +329,7 @@ function Shop() {
                                     <label className="custom-control-label" htmlFor="price-1">
                                         0 VND - 100.000 VND
                                     </label>
-                                    <span className="badge border font-weight-normal">{productCounts['0-100']}</span>
+                                    {/* <span className="badge border font-weight-normal">{productCounts['0-100']}</span> */}
                                 </div>
                                 <div className="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
                                     <input
@@ -339,7 +342,7 @@ function Shop() {
                                     <label className="custom-control-label" htmlFor="price-2">
                                         100.000 VND - 200.000 VND
                                     </label>
-                                    <span className="badge border font-weight-normal">{productCounts['100-200']}</span>
+                                    {/* <span className="badge border font-weight-normal">{productCounts['100-200']}</span> */}
                                 </div>
                                 <div className="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
                                     <input
@@ -352,7 +355,7 @@ function Shop() {
                                     <label className="custom-control-label" htmlFor="price-3">
                                         200.000 VND - 300.000 VND
                                     </label>
-                                    <span className="badge border font-weight-normal">{productCounts['200-300']}</span>
+                                    {/* <span className="badge border font-weight-normal">{productCounts['200-300']}</span> */}
                                 </div>
                                 <div className="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
                                     <input
@@ -365,7 +368,7 @@ function Shop() {
                                     <label className="custom-control-label" htmlFor="price-4">
                                         300.000 VND - 400.000 VND
                                     </label>
-                                    <span className="badge border font-weight-normal">{productCounts['300-400']}</span>
+                                    {/* <span className="badge border font-weight-normal">{productCounts['300-400']}</span> */}
                                 </div>
                                 <div className="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
                                     <input
@@ -378,7 +381,7 @@ function Shop() {
                                     <label className="custom-control-label" htmlFor="price-5">
                                         400.000 VND - 500.000 VND
                                     </label>
-                                    <span className="badge border font-weight-normal">{productCounts['400-500']}</span>
+                                    {/* <span className="badge border font-weight-normal">{productCounts['400-500']}</span> */}
                                 </div>
                                 <div className="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
                                     <input
@@ -391,7 +394,20 @@ function Shop() {
                                     <label className="custom-control-label" htmlFor="price-6">
                                         500.000 VND - 600.000 VND
                                     </label>
-                                    <span className="badge border font-weight-normal">{productCounts['500-600']}</span>
+                                    {/* <span className="badge border font-weight-normal">{productCounts['500-600']}</span> */}
+                                </div>
+                                <div className="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
+                                    <input
+                                        type="checkbox"
+                                        className="custom-control-input"
+                                        value="700-n"
+                                        id="price-7"
+                                        onChange={handlePriceRangeChange}
+                                    />
+                                    <label className="custom-control-label" htmlFor="price-7">
+                                        600.000 VND trở lên
+                                    </label>
+                                    {/* <span className="badge border font-weight-normal">{productCounts['500-600']}</span> */}
                                 </div>
                             </form>
                         </div>
@@ -411,7 +427,7 @@ function Shop() {
                                         <label className="custom-control-label" htmlFor={`author-${author}`}>
                                             {author}
                                         </label>
-                                        <span className="badge border font-weight-normal">{authorCounts[author] || 0}</span>
+                                        {/* <span className="badge border font-weight-normal">{authorCounts[author] || 0}</span> */}
                                     </div>
                                 ))}
                             </form>

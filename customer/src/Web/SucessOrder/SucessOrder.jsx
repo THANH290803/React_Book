@@ -235,14 +235,14 @@ function SucessOrder() {
                 </div>
             </div>
             <header className="site-header" id="header">
-                <h1 className="site-header__title" data-lead-id="site-header-title">THANK YOU!</h1>
+                <h1 className="site-header__title" data-lead-id="site-header-title">CẢM ƠN!</h1>
             </header>
 
             <i className="fa fa-check main-content__checkmark" id="checkmark"></i>
             <div className="main-content">
                 <p className="main-content__body" data-lead-id="main-content-body">
-                    Thanks a bunch for filling that out. It means a lot to us, just like you do! We really
-                    appreciate you giving us a moment of your time today. Thanks for being you.
+                Cảm ơn bạn rất nhiều vì đã tin tưởng và đặt hàng của chúng tôi. 
+                Chúng tôi luôn lấy làm vinh dự để phục vụ những khách hàng yêu dấu của chúng tôi.
                 </p>
             </div>
 

@@ -254,6 +254,7 @@ const Index = (props) => {
                           callbacks: {
                             label: (context) => {
                               return `${context.dataset.label}: ${context.raw.toLocaleString('vi-VN')} VND`;
+                              
                             },
                           },
                         },

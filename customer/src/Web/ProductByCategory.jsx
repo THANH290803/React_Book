@@ -202,34 +202,39 @@ function ProductByCategory() {
     //     }
     // };
 
-    const fetchAuthors = async () => {
-        try {
-            const res = await axios.get('http://127.0.0.1:8000/api/authors');
-            const authorsData = res.data || [];
+    const [authorCounts, setAuthorCounts] = useState({});
 
-            // Split multiple authors and count individually
-            const authorCounts = {};
-            authorsData.forEach(authorString => {
-                authorString.split(',').map(author => author.trim()).forEach(author => {
-                    authorCounts[author] = (authorCounts[author] || 0) + 1;
-                });
-            });
-
-            const authorsWithBookCounts = Object.entries(authorCounts).map(([author, count]) => ({
-                name: author,
-                bookCount: count,
-            }));
-
-            setAuthors(authorsWithBookCounts);
-        } catch (error) {
-            console.error('Error fetching authors: ', error);
-        }
-    };
+    useEffect(() => {
+        // Fetch authors from API
+        axios.get('http://127.0.0.1:8000/api/authors')
+            .then(response => {
+                const authorsList = response.data;
+                setAuthors(authorsList);
+                
+                // Fetch the book count for each author
+                const countPromises = authorsList.map(author => 
+                    axios.get('http://127.0.0.1:8000/api/books/count', {
+                        params: { author }
+                    })
+                );
+                
+                Promise.all(countPromises)
+                    .then(results => {
+                        const counts = {};
+                        results.forEach((result, index) => {
+                            counts[authorsList[index]] = result.data.count;
+                        });
+                        setAuthorCounts(counts);
+                    })
+                    .catch(error => console.error('Error fetching book counts:', error));
+            })
+            .catch(error => console.error('Error fetching authors:', error));
+    }, []);
 
     // useEffect to fetch authors when component mounts
-    useEffect(() => {
-        fetchAuthors();
-    }, []);
+    // useEffect(() => {
+    //     fetchAuthors();
+    // }, []);
 
     // Handle author checkbox change
     const handleAuthorChange = (event) => {
@@ -416,15 +421,15 @@ function ProductByCategory() {
                                         <input
                                             type="checkbox"
                                             className="custom-control-input"
-                                            id={`author-${author.name}`}
-                                            checked={selectedAuthors.includes(author.name)}
+                                            id={`author-${author}`}
+                                            checked={selectedAuthors.includes(author)}
                                             value={author.name}
                                             onChange={handleAuthorChange}
                                         />
-                                        <label className="custom-control-label" htmlFor={`author-${author.name}`}>
-                                            {author.name}
+                                        <label className="custom-control-label" htmlFor={`author-${author}`}>
+                                            {author}
                                         </label>
-                                        <span className="badge border font-weight-normal">{author.bookCount}</span>
+                                        {/* <span className="badge border font-weight-normal">{author.bookCount}</span> */}
                                     </div>
                                 ))}
                             </form>

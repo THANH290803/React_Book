@@ -47,6 +47,7 @@ import moment from 'moment'; // Import moment library
 import 'moment/locale/vi';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import { confirmAlert } from 'react-confirm-alert';
+import { Link } from "react-router-dom";
 
 const Order = () => {
   const [orders, setOrders] = useState([]);
@@ -601,9 +602,9 @@ const Order = () => {
                       />
                     ) : (
                       <>
-                        <span style={{ minWidth: '50px', display: 'inline-block' }}>
+                        <Link to={'https://i.ghtk.vn/' + shippingCode} style={{ minWidth: '50px', display: 'inline-block' }}>
                           {shippingCode === '' ? 'N/A' : shippingCode}
-                        </span>
+                        </Link>
                         {(() => {
                           if (selectedOrder.status == 3) {
                             return (
@@ -625,7 +626,7 @@ const Order = () => {
                       />
                     )}
                   </p>
-                  <p><strong>Mã giao dịch:</strong> {selectedOrder.transaction_code ? selectedOrder.transaction_code : selectedOrder.payment_method_name}</p>
+                  <p><strong>Phương thức thanh toán:</strong> {selectedOrder.transaction_code ? selectedOrder.transaction_code : selectedOrder.payment_method_name}</p>
                   <p><strong>Người duyệt đơn:</strong> {selectedOrder.approver_name ? selectedOrder.approver_name : 'N/A'}</p>
                   <p><strong>Người sửa đơn hàng:</strong> {selectedOrder.editor_name ? selectedOrder.editor_name : 'N/A'}</p>
                 </div>
